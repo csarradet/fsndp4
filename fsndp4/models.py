@@ -1,6 +1,7 @@
 import logging
 
 from google.appengine.ext import ndb
+from protorpc import messages
 
 
 class User(ndb.Model):
@@ -14,6 +15,22 @@ class User(ndb.Model):
             instance.put()
             logging.info("Created new user: {}".format(email))
         return instance
+
+    @staticmethod
+    def get_all():
+        return User.query().fetch(limit=None)
+
+    def to_message(self):
+        inst = UserMessage()
+        inst.email = self.email
+        return inst
+
+class UserMessage(messages.Message):
+    email = messages.StringField(1)
+
+class MultiUserMessage(messages.Message):
+    emails = messages.MessageField(UserMessage, 1, repeated=True)
+
 
 
 class Game(ndb.Model):
@@ -38,3 +55,5 @@ class Game(ndb.Model):
 
     def sub_point(self, player):
         self.scores[player.email] -= 1
+
+

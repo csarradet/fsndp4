@@ -4,6 +4,7 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+
 handlers:
 - url: /favicon\.ico
   static_files: favicon.ico
@@ -14,12 +15,14 @@ handlers:
 
 - url: /crons/send_reminder
   script: main.app
-  
+
 - url: .*
   script: main.app
+
 
 libraries:
 - name: webapp2
   version: "2.5.2"
+
 - name: endpoints
-  version: latest
+  version: 1.0

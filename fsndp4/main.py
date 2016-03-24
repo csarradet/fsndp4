@@ -1,10 +1,5 @@
-from google.appengine.ext import ndb
-from protorpc import messages
-
-
 from google.appengine.api import mail, app_identity
-
-from models import User
+import webapp2
 
 class SendReminderEmail(webapp2.RequestHandler):
     def get(self):
