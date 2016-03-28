@@ -1,3 +1,4 @@
+from functools import wraps
 import logging
 
 import endpoints
@@ -7,6 +8,13 @@ from protorpc import messages, message_types, remote
 
 from models import User, Game
 
+
+# Valid endpoints exceptions:
+# endpoints.BadRequestException   HTTP 400
+# endpoints.UnauthorizedException HTTP 401
+# endpoints.ForbiddenException    HTTP 403
+# endpoints.NotFoundException HTTP 404
+# endpoints.InternalServerErrorException  HTTP 500
 
 
 def create_user_message(email_str):
@@ -32,6 +40,21 @@ class UserCollection(messages.Message):
         )
 class LiarsDiceApi(remote.Service):
 
+    def admin_only(func):
+        """ Requires that the API user be logged in and flagged as an admin in the datastore """
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            current_user = endpoints.get_current_user()
+            if current_user is None:
+                raise endpoints.UnauthorizedException('Invalid token')
+            current_user_model = User.get_or_create(current_user.email())
+            if not current_user_model.is_admin:
+                raise endpoints.ForbiddenException('You must be an admin to perform that action')
+            return func(*args, **kwargs)
+
+        return decorator
+
+
     @endpoints.method(message_types.VoidMessage,
             UserCollection,
             http_method="GET")
@@ -45,15 +68,8 @@ class LiarsDiceApi(remote.Service):
     @endpoints.method(UserMessage,
             message_types.VoidMessage,
             http_method="POST")
+    @admin_only
     def create_user(self, request):
-        current_user = endpoints.get_current_user()
-        if current_user is None:
-            raise endpoints.UnauthorizedException('Invalid token')
-        current_user_model = User.get_or_create(current_user.email())
-        if not current_user_model.is_admin:
-            raise endpoints.ForbiddenException('You must be an admin to perform that action')
-
-
         inst = User()
         inst.email = request.email
         inst.put()
