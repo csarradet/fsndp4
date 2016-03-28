@@ -1,17 +1,18 @@
 import logging
 
 from google.appengine.ext import ndb
-from protorpc import messages
 
 
 class User(ndb.Model):
     email = ndb.StringProperty(required=True)
+    is_admin = ndb.BooleanProperty(default=False)
 
     @staticmethod
     def get_or_create(email):
         instance = User.get_by_id(email)
         if not instance:
             instance = User(id=email)
+            instance.email = email
             instance.put()
             logging.info("Created new user: {}".format(email))
         return instance
@@ -20,21 +21,11 @@ class User(ndb.Model):
     def get_all():
         return User.query().fetch(limit=None)
 
-    def to_message(self):
-        inst = UserMessage()
-        inst.email = self.email
-        return inst
-
-class UserMessage(messages.Message):
-    email = messages.StringField(1)
-
-class MultiUserMessage(messages.Message):
-    emails = messages.MessageField(UserMessage, 1, repeated=True)
 
 
 
 class Game(ndb.Model):
-    players = ndb.KeyProperty(required=True, kind="User", repeated=True)
+    players = ndb.KeyProperty(kind="User", repeated=True)
     scores = ndb.PickleProperty(required=True)
 
     @staticmethod

@@ -11,13 +11,13 @@ handlers:
   upload: favicon\.ico
 
 - url: /_ah/spi/.*
-  script: api.api
+  script: main.API_APP
 
 - url: /crons/send_reminder
-  script: main.app
+  script: main.WEB_APP
 
 - url: .*
-  script: main.app
+  script: main.WEB_APP
 
 
 libraries:

@@ -1,6 +1,9 @@
 from google.appengine.api import mail, app_identity
 import webapp2
 
+import api
+
+
 class SendReminderEmail(webapp2.RequestHandler):
     def get(self):
         """Send a reminder email to each User with an email about games.
@@ -17,7 +20,16 @@ class SendReminderEmail(webapp2.RequestHandler):
                            subject,
                            body)
 
+class HelloWorld(webapp2.RequestHandler):
+    def get(self):
+        self.response.out.write("Hello world")
 
-app = webapp2.WSGIApplication([
+
+
+WEB_APP = webapp2.WSGIApplication([
+    ('/', HelloWorld),
     ('/crons/send_reminder', SendReminderEmail),
 ], debug=True)
+
+
+API_APP = api.APP
