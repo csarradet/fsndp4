@@ -4,8 +4,10 @@ Create a new App Engine project
 Update app.yaml to reflect your project name
 Deploy project
 
+
 Allow the app to see your account and log it in the DB:
-Access the live API explorer (https://##your_app_id##.appspot.com/_ah/api/explorer) and run the create_user query with OAuth 2.0 enabled and an empty request body
+Access the live API explorer (https://##your_app_id##.appspot.com/_ah/api/explorer) and run the user.enroll method with OAuth 2.0 enabled
+
 
 Flag your account as an admin (log in with the same account you used to create the project):
 Access console.developers.google.com

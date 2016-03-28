@@ -17,22 +17,51 @@ from models import User, Game
 # endpoints.InternalServerErrorException  HTTP 500
 
 
+# Endpoints message classes that correspond to our models
+class UserMessage(messages.Message):
+    email = messages.StringField(1, required=True)
+
+class UserCollection(messages.Message):
+    user_messages = messages.MessageField(UserMessage, 1, repeated=True)
+
+class ScoreMessage(messages.Message):
+    user = messages.MessageField(UserMessage, 1, required=True)
+    score = messages.IntegerField(2, required=True)
+
+class GameMessage(messages.Message):
+    score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
+
+class GameCollection(messages.Message):
+    game_messages = messages.MessageField(GameMessage, 1, repeated=True)
+
+
+# Helper methods for message creation
 def create_user_message(email_str):
     inst = UserMessage()
     inst.email = email_str
     return inst
 
+def create_score_message(email_str, score):
+    inst = ScoreMessage()
+    inst.user = create_user_message(email_str)
+    inst.score = int(score)
+    return inst
+
+# Helper methods for converting models into messages
 def user_to_message(user_model):
     return create_user_message(user_model.email)
 
-class UserMessage(messages.Message):
-    email = messages.StringField(1)
+def game_to_message(game_model):
+    inst = GameMessage()
+    inst.score_messages = []
+    for player in game_model.scores:
+        score_message = create_score_message(
+            player, game_model.scores[player])
+        inst.score_messages.append(score_message)
+    return inst
 
-class UserCollection(messages.Message):
-    user_messages = messages.MessageField(UserMessage, 1, repeated=True)
 
-
-
+# API definitions
 @endpoints.api(name='liars_dice',
         version='v1',
         description="Liar's Dice API",
@@ -55,25 +84,90 @@ class LiarsDiceApi(remote.Service):
         return decorator
 
 
+
+
+    @endpoints.method(message_types.VoidMessage,
+            message_types.VoidMessage,
+            http_method="POST",
+            path="enroll_user",
+            name="users.enroll")
+    @admin_only
+    def enroll_user(self, request):
+        """
+        Creates a new user record in the DB for the logged in user, unless it already exists.
+        """
+        # The admin_only decorator does all the work here, no need for anything else.
+        return message_types.VoidMessage()
+
+
     @endpoints.method(message_types.VoidMessage,
             UserCollection,
-            http_method="GET")
+            http_method="GET",
+            path="users",
+            name="users.list")
     def list_users(self, request):
-        user_messages = [user_to_message(x) for x in User.get_all()]
+        """ List all users that have ever interacted with the system """
         response = UserCollection()
-        response.user_messages = user_messages
+        response.user_messages = [user_to_message(x) for x in User.get_all()]
         return response
 
 
-    @endpoints.method(UserMessage,
+    @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
-            http_method="POST")
+            http_method="DELETE",
+            path="users",
+            name="users.delete")
     @admin_only
-    def create_user(self, request):
-        inst = User()
-        inst.email = request.email
-        inst.put()
+    def delete_users(self, request):
+        """ Wipe all locally stored user info from the database """
+        User.delete_all()
         return message_types.VoidMessage()
+
+
+
+
+
+    @endpoints.method(message_types.VoidMessage,
+            GameCollection,
+            http_method="GET",
+            path="games",
+            name="games.list")
+    def list_games(self, request):
+        """ List all active and completed games """
+        response = GameCollection()
+        response.game_messages = [game_to_message(x) for x in Game.get_all()]
+        return response
+
+
+    @endpoints.method(message_types.VoidMessage,
+            message_types.VoidMessage,
+            http_method="DELETE",
+            path="games",
+            name="games.delete")
+    @admin_only
+    def delete_games(self, request):
+        """ Wipe all active and completed games from the database """
+        Game.delete_all()
+        return message_types.VoidMessage()
+
+
+    @endpoints.method(UserCollection,
+            GameMessage,
+            http_method="POST",
+            path="games",
+            name="games.create")
+    @admin_only
+    def create_game(self, request):
+        """ If the current user is an admin, create a new game containing the provided players """
+        if not request.user_messages:
+            raise endpoints.BadRequestException("You must specify which players will be participating in the game")
+
+        players = []
+        for um in request.user_messages:
+            players.append(um.email)
+
+        game = Game.create(players)
+        return game_to_message(game)
 
 
 
