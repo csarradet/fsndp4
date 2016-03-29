@@ -31,10 +31,17 @@ class ScoreMessage(messages.Message):
 class DiceMessage(messages.Message):
     die_rolls = messages.IntegerField(1, repeated=True)
 
+class BidMessage(messages.Message):
+    count = messages.IntegerField(1, required=True)
+    rank = messages.IntegerField(2, required=True)
+
 class GameMessage(messages.Message):
+    """ Only includes info that should be visible to the active player """
     score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
     active_player = messages.MessageField(UserMessage, 2, required=True)
     active_player_hand = messages.MessageField(DiceMessage, 3, required=True)
+    high_bidder = messages.MessageField(UserMessage, 4)
+    high_bid = messages.MessageField(BidMessage, 5)
 
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
@@ -43,19 +50,33 @@ class GameCollection(messages.Message):
 
 # Helper methods for message creation
 def create_user_message(email_str):
+    if not email_str:
+        return None
     inst = UserMessage()
     inst.email = email_str
     return inst
 
 def create_score_message(email_str, score):
+    if not email_str and score:
+        return None
     inst = ScoreMessage()
     inst.user = create_user_message(email_str)
     inst.score = int(score)
     return inst
 
 def create_dice_message(int_list):
+    if not int_list:
+        return None
     inst = DiceMessage()
     inst.die_rolls = [int(x) for x in int_list]
+    return inst
+
+def create_bid_message(count, rank):
+    if not count and rank:
+        return None
+    inst = BidMessage()
+    inst.count = int(count)
+    inst.rank = int(rank)
     return inst
 
 # Helper methods for converting models into messages
@@ -64,6 +85,7 @@ def user_to_message(user_model):
 
 def game_to_message(game_model):
     inst = GameMessage()
+    # Scores are public info    
     inst.score_messages = []
     for key in game_model.player_keys:
         email = User.email_from_key(key)
@@ -71,11 +93,27 @@ def game_to_message(game_model):
             email, game_model.scores[key])
         inst.score_messages.append(score_message)
 
+    # The active player's hand (and only *their* hand) is public info
     active_player_email = User.email_from_key(
         game_model.active_player_key)
     inst.active_player = create_user_message(active_player_email)
     inst.active_player_hand = create_dice_message(
         game_model.dice[game_model.active_player_key])
+
+    # The high bid is public info
+    hbkey = game_model.high_bidder_key
+    if hbkey:    
+        high_bidder_email = User.email_from_key(
+            game_model.high_bidder_key)
+        inst.high_bidder = create_user_message(high_bidder_email)
+    else:
+        inst.high_bidder = None
+
+    hb = game_model.high_bid
+    if hb:
+        inst.high_bid = create_bid_message(hb.count, hb.rank)
+    else:
+        inst.high_bid = None
 
     return inst
 

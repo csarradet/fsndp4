@@ -5,6 +5,23 @@ import models
 
 STARTING_HAND_SIZE = 5
 
+def GameLogicError(Exception):
+    pass
+
+def InvalidMoveError(GameLogicError):
+    """ 
+    The player attempted a move that was illegal according to the game rules. 
+    """
+    pass
+
+def NotActivePlayerError(GameLogicError):
+    """ 
+    The logged in user is not the active player for the game in which they
+    attempted a move. 
+    """
+    pass
+
+
 def initialize(game):
     """
     Performs all tasks required to prepare the game for play.

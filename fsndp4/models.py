@@ -49,8 +49,8 @@ class Game(ndb.Model):
     #   in that player's hand (may be an empty list if
     #   the player has been eliminated)
     dice = ndb.PickleProperty(required=True)
-    high_bidder = ndb.KeyProperty(kind=User)
-    high_bid = ndb.StructuredProperty(Bid)
+    high_bidder_key = ndb.KeyProperty(kind=User, default=None)
+    high_bid = ndb.StructuredProperty(Bid, default=None)
     log = ndb.StringProperty(repeated=True)
 
 
