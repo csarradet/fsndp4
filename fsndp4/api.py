@@ -328,6 +328,7 @@ class LiarsDiceApi(remote.Service):
         try:
             game_logic.place_bid(game, new_bid, bidder_key)
         except GameLogicError:
+            logging.exception("Invalid action")
             raise endpoints.BadRequestException("Invalid action")
         return message_types.VoidMessage()    
 
