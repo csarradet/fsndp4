@@ -35,6 +35,9 @@ class BidMessage(messages.Message):
     count = messages.IntegerField(1, required=True)
     rank = messages.IntegerField(2, required=True)
 
+class GameIdMessage(messages.Message):
+    value = messages.IntegerField(1, required=True)
+
 class GameMessage(messages.Message):
     """ Only includes info that should be visible to the active player """
     score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
@@ -42,6 +45,7 @@ class GameMessage(messages.Message):
     active_player_hand = messages.MessageField(DiceMessage, 3, required=True)
     high_bidder = messages.MessageField(UserMessage, 4)
     high_bid = messages.MessageField(BidMessage, 5)
+    game_id = messages.MessageField(GameIdMessage, 6, required=True)
 
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
@@ -79,12 +83,22 @@ def create_bid_message(count, rank):
     inst.rank = int(rank)
     return inst
 
+def create_game_id_message(gid):
+    inst = GameIdMessage()
+    inst.gid = gid
+    return inst
+
 # Helper methods for converting models into messages
 def user_to_message(user_model):
     return create_user_message(user_model.email)
 
 def game_to_message(game_model):
     inst = GameMessage()
+
+    # Game ID is public, and will be needed to post moves
+    raw_id = game_model.key.id()
+    inst.game_id = create_game_id_message(raw_id)
+
     # Scores are public info    
     inst.score_messages = []
     for key in game_model.player_keys:
