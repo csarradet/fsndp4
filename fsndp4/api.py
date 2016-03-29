@@ -7,7 +7,8 @@ from google.appengine.ext import ndb
 from protorpc import messages, message_types, remote
 
 import game_logic
-from models import User, Game
+from game_logic import GameLogicError
+from models import User, Game, Bid
 
 
 # Valid endpoints exceptions:
@@ -294,7 +295,6 @@ class LiarsDiceApi(remote.Service):
     GAME_LOOKUP_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
         game_id=messages.IntegerField(1, required=True))
-
     @endpoints.method(GAME_LOOKUP_RC,
         GameMessage,
         http_method="GET",
@@ -315,19 +315,20 @@ class LiarsDiceApi(remote.Service):
         message_types.VoidMessage,
         http_method="POST",
         path="games/{game_id}/bids",
-        name="games.bids.post")
+        name="games.bids.place")
     @login_required
     @game_required
+    @active_player_only
     def place_bid(self, request, **kwargs):
-        # TODO: placeholder
-        count = self.request.count
-        rank = self.request.rank
-        game_model = Game.get_by_id(request.game_id)
-        if not game_model:
-            raise endpoints.NotFoundException()
-
-
-
+        bidder_key = kwargs["current_user_model"].key
+        game = kwargs["game_model"]
+        new_bid = Bid()
+        new_bid.count = request.count
+        new_bid.rank = request.rank
+        try:
+            game_logic.place_bid(game, new_bid, bidder_key)
+        except GameLogicError:
+            raise endpoints.BadRequestException("Invalid action")
         return message_types.VoidMessage()    
 
 

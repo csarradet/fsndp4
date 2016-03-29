@@ -5,19 +5,12 @@ import models
 
 STARTING_HAND_SIZE = 5
 
-def GameLogicError(Exception):
+class GameLogicError(Exception):
     pass
 
-def InvalidMoveError(GameLogicError):
+class InvalidMoveError(GameLogicError):
     """ 
     The player attempted a move that was illegal according to the game rules. 
-    """
-    pass
-
-def NotActivePlayerError(GameLogicError):
-    """ 
-    The logged in user is not the active player for the game in which they
-    attempted a move. 
     """
     pass
 
@@ -45,7 +38,7 @@ def roll_hand(hand_size=STARTING_HAND_SIZE):
     return [roll() for x in range(hand_size)]
 
 
-def place_bid(game, bid, bidder_email):
+def place_bid(game, bid, bidder_key):
     """
     A player's (possibly false) assertion that they have at least
     {count} dice showing the face {rank}.
@@ -56,7 +49,7 @@ def place_bid(game, bid, bidder_email):
       - new_count > old_count
       - new_count == old_count AND new_rank > old_rank
     """    
-    pass
+    raise InvalidMoveError("Stub method, to be implemented")
 
 
 def call_bluff(game):
