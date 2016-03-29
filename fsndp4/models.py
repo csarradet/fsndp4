@@ -32,6 +32,11 @@ class User(ndb.Model):
         return user_key.get().email
 
 
+class Bid(ndb.Model):
+    count = ndb.IntegerProperty(required=True)
+    rank = ndb.IntegerProperty(required=True)
+
+
 class Game(ndb.Model):
     # List of ndb keys for all players in this game
     player_keys = ndb.KeyProperty(kind=User, repeated=True)
@@ -44,6 +49,8 @@ class Game(ndb.Model):
     #   in that player's hand (may be an empty list if
     #   the player has been eliminated)
     dice = ndb.PickleProperty(required=True)
+    high_bidder = ndb.KeyProperty(kind=User)
+    high_bid = ndb.StructuredProperty(Bid)
     log = ndb.StringProperty(repeated=True)
 
 

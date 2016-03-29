@@ -98,6 +98,7 @@ class LiarsDiceApi(remote.Service):
             current_user_model = User.get_or_create(current_user.email())
             if not current_user_model.is_admin:
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
+            
             return func(*args, **kwargs)
         return decorator
 

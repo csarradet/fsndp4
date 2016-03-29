@@ -23,5 +23,43 @@ def initialize(game):
 def roll(faces=6):
     return randint(1,faces)
 
+
 def roll_hand(hand_size=STARTING_HAND_SIZE):
     return [roll() for x in range(hand_size)]
+
+
+def place_bid(game, bid, bidder_email):
+    """
+    A player's (possibly false) assertion that they have at least
+    {count} dice showing the face {rank}.
+
+    If no bids exist, any physically possible bid is valid.
+
+    A new bid must meet at least one of these criteria:
+      - new_count > old_count
+      - new_count == old_count AND new_rank > old_rank
+    """    
+    pass
+
+
+def call_bluff(game):
+    """
+    If the high bid was a bluff, the high bidder removes one die.
+    Otherwise, the active player removes a die.
+    """
+    pass
+
+def call_spot_on(game):
+    """
+    If the high bidder has exactly {count} dice of face {rank},
+    everyone except the active player removes a die.
+    Otherwise, the active player removes a die.
+    """
+    pass
+
+def remove_die(game, player):
+    """
+    When a player's last die is removed, they're eliminated from
+    this round.  Check to see if there are still active players.
+    """
+    pass
