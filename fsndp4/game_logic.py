@@ -87,6 +87,10 @@ def __do_place_bid(game, new_bid, bidder_key):
     game.high_bid = new_bid
     game.high_bidder_key = bidder_key
     assign_next_player(game)
+    new_player_email = models.User.email_from_key(
+        game.active_player_key)
+    game.log.append("{}: It is now {}'s turn".format(
+        datetime.datetime.now(), new_player_email))
     game.put()
 
 def call_bluff(game):
