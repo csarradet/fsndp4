@@ -5,6 +5,11 @@ import models
 
 
 class GameLogicError(Exception):
+    """
+    Top-level exception for all errors raised by our game logic layer.
+    Calling methods can safely catch this if they don't care exactly
+    why an action was rejected.
+    """
     pass
 
 class InvalidMoveError(GameLogicError):
@@ -67,8 +72,16 @@ def place_bid(game, new_bid, bidder_key):
         raise InvalidMoveError("Illegal bid")
 
 def __do_place_bid(game, new_bid, bidder_key):
-    pass
-
+    bidder_email = models.User.email_from_key(bidder_key)
+    game.log.append("{}: {} placed the bid {}x{}".format(
+        datetime.datetime.now(), bidder_email,
+        new_bid.count, new_bid.rank))
+    # game.high_bid.count = new_bid.count
+    # game.high_bid.rank = new_bid.rank
+    game.high_bid = new_bid
+    game.high_bidder_key = bidder_key
+    next_player(game)
+    game.put()
 
 def call_bluff(game):
     """
@@ -89,5 +102,12 @@ def remove_die(game, player):
     """
     When a player's last die is removed, they're eliminated from
     this round.  Check to see if there are still active players.
+    """
+    pass
+
+def next_player(game):
+    """
+    Someone has taken an action; move the game along by selecting
+    the new active player.
     """
     pass
