@@ -58,7 +58,9 @@ class Game(ndb.Model):
     def create(player_emails):
         """ Players should be an array of email address strings """
         game = Game()
-        game.player_keys = [User.get_or_create(x).key for x in player_emails]
+        player_keys = [User.get_or_create(x).key for x in player_emails]
+        player_keys.sort()
+        game.player_keys = player_keys
         game_logic.initialize(game)
         game.put()
         return game

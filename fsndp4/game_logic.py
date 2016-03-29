@@ -18,6 +18,12 @@ class InvalidMoveError(GameLogicError):
     """
     pass
 
+class GameRosterError(GameLogicError):
+    """
+    There's something wrong with the game's internal player roster.
+    """
+    pass
+
 
 def initialize(game):
     """
@@ -80,7 +86,7 @@ def __do_place_bid(game, new_bid, bidder_key):
     # game.high_bid.rank = new_bid.rank
     game.high_bid = new_bid
     game.high_bidder_key = bidder_key
-    next_player(game)
+    assign_next_player(game)
     game.put()
 
 def call_bluff(game):
@@ -105,9 +111,29 @@ def remove_die(game, player):
     """
     pass
 
-def next_player(game):
+def assign_next_player(game):
     """
     Someone has taken an action; move the game along by selecting
     the new active player.
     """
-    pass
+    new_key = __choose_next_player(game)
+    game.active_player_key = new_key
+
+
+def __choose_next_player(game):
+    # Concatenate the player list against itself to catch the case
+    # where a player is last in the list.
+    iter_players = game.player_keys + game.player_keys
+    curr_key = game.active_player_key
+    if curr_key not in iter_players:
+        raise GameRosterError(
+            "Active player is not enrolled for game {}".format(game.key))
+    pick_next = False
+    for i in iter_players:
+        if pick_next:
+            return i
+        if curr_key == i:
+            pick_next = True
+    raise AssertionError("Unable to choose next player")
+
+
