@@ -7,12 +7,6 @@ class User(ndb.Model):
     email = ndb.StringProperty(required=True)
     is_admin = ndb.BooleanProperty(default=False)
 
-    # The canonical way to uniquely access a user is assumed
-    # to be their email address; other modules should either
-    # call this method to create a full User object (if
-    # peripheral info is needed) or simply use the raw email
-    # address strings (if we only need to identify the user,
-    # avoiding a database hit).
     @staticmethod
     def get_or_create(email):
         instance = User.get_by_id(email)
@@ -32,19 +26,26 @@ class User(ndb.Model):
         keys = User.query().fetch(keys_only=True)
         ndb.delete_multi(keys)
 
+    @staticmethod
+    def email_from_key(user_key):
+        # TODO: memcache
+        return user_key.get().email
 
 
 class Game(ndb.Model):
-    # Contains the canonical list of all players in the game (keys)
-    # along with their current scores (values).
+    # List of ndb keys for all players in this game
+    player_keys = ndb.KeyProperty(kind=User, repeated=True)
+    # Key: a participanting player's key
+    # Value: that player's current score
     scores = ndb.PickleProperty(required=True)
 
     @staticmethod
-    def create(players):
+    def create(player_emails):
         """ Players should be an array of email address strings """
         game = Game()
+        game.player_keys = [User.get_or_create(x).key for x in player_emails]
         game.scores = {}
-        for p in players:
+        for p in game.player_keys:
             game.set_score(p, 0)
         game.put()
         return game
@@ -66,5 +67,3 @@ class Game(ndb.Model):
 
     def sub_point(self, player):
         self.scores[player] -= 1
-
-

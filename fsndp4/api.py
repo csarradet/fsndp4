@@ -54,9 +54,10 @@ def user_to_message(user_model):
 def game_to_message(game_model):
     inst = GameMessage()
     inst.score_messages = []
-    for player in game_model.scores:
+    for key in game_model.player_keys:
+        email = User.email_from_key(key)
         score_message = create_score_message(
-            player, game_model.scores[player])
+            email, game_model.scores[key])
         inst.score_messages.append(score_message)
     return inst
 
@@ -80,9 +81,7 @@ class LiarsDiceApi(remote.Service):
             if not current_user_model.is_admin:
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
             return func(*args, **kwargs)
-
         return decorator
-
 
 
 
@@ -94,7 +93,7 @@ class LiarsDiceApi(remote.Service):
     @admin_only
     def enroll_user(self, request):
         """
-        Creates a new user record in the DB for the logged in user, unless it already exists.
+        Create a new user record in the DB for the logged in user unless one already exists.
         """
         # The admin_only decorator does all the work here, no need for anything else.
         return message_types.VoidMessage()
@@ -161,12 +160,8 @@ class LiarsDiceApi(remote.Service):
         """ If the current user is an admin, create a new game containing the provided players """
         if not request.user_messages:
             raise endpoints.BadRequestException("You must specify which players will be participating in the game")
-
-        players = []
-        for um in request.user_messages:
-            players.append(um.email)
-
-        game = Game.create(players)
+        player_emails = [x.email for x in request.user_messages]
+        game = Game.create(player_emails)
         return game_to_message(game)
 
 
