@@ -141,22 +141,59 @@ def game_to_message(game_model):
         )
 class LiarsDiceApi(remote.Service):
 
-    def admin_only(func):
-        """ Requires that the API user be logged in and flagged as an admin in the datastore """
+    # Define API method decorators
+    
+    # Decorator that allows a decorator to decorate a decorator, uses code from:
+    # http://stackoverflow.com/questions/5952641/decorating-decorators-try-to-get-my-head-around-understanding-it
+    # (joking aside, this lets us reuse code, as with login_required and admin_only below)
+    def decdec(inner_dec):
+        def ddmain(outer_dec):
+            def decwrapper(f):
+                wrapped = inner_dec(outer_dec(f))
+                def fwrapper(*args, **kwargs):
+                   return wrapped(*args, **kwargs)
+                return fwrapper
+            return decwrapper
+        return ddmain
+
+
+    def login_required(func):
+        """
+        Requires that the API user be logged in before calling a method.
+        Saves their User instance as a current_user_model kwarg.
+        """
         @wraps(func)
         def decorator(*args, **kwargs):
             current_user = endpoints.get_current_user()
             if current_user is None:
                 raise endpoints.UnauthorizedException('Invalid token')
             current_user_model = User.get_or_create(current_user.email())
-            if not current_user_model.is_admin:
+            kwargs["current_user_model"] = current_user_model
+            return func(*args, **kwargs)
+        return decorator
+
+
+    @decdec(login_required)
+    def admin_only(func):
+        """ 
+        Requires that the API user be logged in and flagged as an admin in the datastore.
+        Saves the instance as a current_user_model kwarg.
+        (implies login_required)
+        """
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            user = kwargs["current_user_model"]
+            if not user:
+                raise endpoints.UnauthorizedException('Invalid token')
+            if not user.is_admin:
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
-            
             return func(*args, **kwargs)
         return decorator
 
 
 
+
+    # Define API methods
     @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
             http_method="POST",
@@ -204,7 +241,7 @@ class LiarsDiceApi(remote.Service):
             path="games",
             name="games.list")
     @admin_only
-    def list_games(self, request):
+    def list_games(self, request, **kwargs):
         """ List all active and completed games """
         response = GameCollection()
         response.game_messages = [game_to_message(x) for x in Game.get_all()]
