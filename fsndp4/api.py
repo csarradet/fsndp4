@@ -85,7 +85,7 @@ def create_bid_message(count, rank):
 
 def create_game_id_message(gid):
     inst = GameIdMessage()
-    inst.gid = gid
+    inst.value = int(gid)
     return inst
 
 # Helper methods for converting models into messages
@@ -114,7 +114,7 @@ def game_to_message(game_model):
     inst.active_player_hand = create_dice_message(
         game_model.dice[game_model.active_player_key])
 
-    # The high bid is public info
+    # The high bid/bidder are public info
     hbkey = game_model.high_bidder_key
     if hbkey:    
         high_bidder_email = User.email_from_key(
@@ -208,6 +208,24 @@ class LiarsDiceApi(remote.Service):
         response = GameCollection()
         response.game_messages = [game_to_message(x) for x in Game.get_all()]
         return response
+
+
+
+
+    GAME_LOOKUP_RC = endpoints.ResourceContainer(
+        message_types.VoidMessage,
+        game_id=messages.IntegerField(1, required=True))
+
+    @endpoints.method(GAME_LOOKUP_RC,
+        GameMessage,
+        http_method="GET",
+        path="games/{game_id}",
+        name="games.lookup")
+    @admin_only
+    def lookup_game(self, request):
+        """ Look up one particular active or completed game """
+        game_model = Game.get_by_id(request.game_id)
+        return game_to_message(game_model)
 
 
     @endpoints.method(message_types.VoidMessage,
