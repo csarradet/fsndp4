@@ -28,11 +28,17 @@ class ScoreMessage(messages.Message):
     user = messages.MessageField(UserMessage, 1, required=True)
     score = messages.IntegerField(2, required=True)
 
+class DiceMessage(messages.Message):
+    die_rolls = messages.IntegerField(1, repeated=True)
+
 class GameMessage(messages.Message):
     score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
+    active_player = messages.MessageField(UserMessage, 2, required=True)
+    active_player_hand = messages.MessageField(DiceMessage, 3, required=True)
 
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
+
 
 
 # Helper methods for message creation
@@ -47,6 +53,11 @@ def create_score_message(email_str, score):
     inst.score = int(score)
     return inst
 
+def create_dice_message(int_list):
+    inst = DiceMessage()
+    inst.die_rolls = [int(x) for x in int_list]
+    return inst
+
 # Helper methods for converting models into messages
 def user_to_message(user_model):
     return create_user_message(user_model.email)
@@ -59,6 +70,13 @@ def game_to_message(game_model):
         score_message = create_score_message(
             email, game_model.scores[key])
         inst.score_messages.append(score_message)
+
+    active_player_email = User.email_from_key(
+        game_model.active_player_key)
+    inst.active_player = create_user_message(active_player_email)
+    inst.active_player_hand = create_dice_message(
+        game_model.dice[game_model.active_player_key])
+
     return inst
 
 
@@ -131,6 +149,7 @@ class LiarsDiceApi(remote.Service):
             http_method="GET",
             path="games",
             name="games.list")
+    @admin_only
     def list_games(self, request):
         """ List all active and completed games """
         response = GameCollection()
@@ -151,7 +170,7 @@ class LiarsDiceApi(remote.Service):
 
 
     @endpoints.method(UserCollection,
-            GameMessage,
+            message_types.VoidMessage,
             http_method="POST",
             path="games",
             name="games.create")
@@ -162,7 +181,7 @@ class LiarsDiceApi(remote.Service):
             raise endpoints.BadRequestException("You must specify which players will be participating in the game")
         player_emails = [x.email for x in request.user_messages]
         game = Game.create(player_emails)
-        return game_to_message(game)
+        return message_types.VoidMessage()
 
 
 

@@ -1,6 +1,6 @@
 import logging
-
 from google.appengine.ext import ndb
+import game_logic
 
 
 class User(ndb.Model):
@@ -35,18 +35,22 @@ class User(ndb.Model):
 class Game(ndb.Model):
     # List of ndb keys for all players in this game
     player_keys = ndb.KeyProperty(kind=User, repeated=True)
+    active_player_key = ndb.KeyProperty(kind=User, required=True)
     # Key: a participanting player's key
     # Value: that player's current score
     scores = ndb.PickleProperty(required=True)
+    # Key: same as above
+    # Value: a list of integers representing the dice remaining
+    #   in that player's hand (may be an empty list if
+    #   the player has been eliminated)
+    dice = ndb.PickleProperty(required=True)
 
     @staticmethod
     def create(player_emails):
         """ Players should be an array of email address strings """
         game = Game()
         game.player_keys = [User.get_or_create(x).key for x in player_emails]
-        game.scores = {}
-        for p in game.player_keys:
-            game.set_score(p, 0)
+        game_logic.initialize(game)
         game.put()
         return game
 
@@ -59,11 +63,5 @@ class Game(ndb.Model):
         keys = Game.query().fetch(keys_only=True)
         ndb.delete_multi(keys)
 
-    def set_score(self, player, score):
-        self.scores[player] = score
-
-    def add_point(self, player):
+    def add_point(self, player_key):
         self.scores[player] += 1
-
-    def sub_point(self, player):
-        self.scores[player] -= 1
