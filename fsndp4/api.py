@@ -6,6 +6,7 @@ from google.appengine.api import oauth
 from google.appengine.ext import ndb
 from protorpc import messages, message_types, remote
 
+import game_logic
 from models import User, Game
 
 
@@ -225,7 +226,31 @@ class LiarsDiceApi(remote.Service):
     def lookup_game(self, request):
         """ Look up one particular active or completed game """
         game_model = Game.get_by_id(request.game_id)
+        if not game_model:
+            raise endpoints.NotFoundException()
         return game_to_message(game_model)
+
+
+    BID_POST_RC = endpoints.ResourceContainer(
+        BidMessage,
+        game_id=messages.IntegerField(1, required=True))
+    @endpoints.method(BID_POST_RC,
+        message_types.VoidMessage,
+        http_method="POST",
+        path="games/{game_id}/bids",
+        name="games.bids.post")
+    def place_bid(self, request):
+        # TODO: placeholder
+        count = self.request.count
+        rank = self.request.rank
+        game_model = Game.get_by_id(request.game_id)
+        if not game_model:
+            raise endpoints.NotFoundException()
+
+        # TODO: taking a detour, need to get logged in user's email address
+        # Trying to extend the admin decorator
+
+        return message_types.VoidMessage()    
 
 
     @endpoints.method(message_types.VoidMessage,
