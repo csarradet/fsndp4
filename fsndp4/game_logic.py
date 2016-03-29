@@ -1,5 +1,6 @@
-import models
+import datetime
 from random import randint
+import models
 
 
 STARTING_HAND_SIZE = 5
@@ -15,6 +16,8 @@ def initialize(game):
     game.active_player_key = keys[0]
     game.scores = {x: 0 for x in keys}
     game.dice = {x: roll_hand() for x in keys}
+    game.log = ["{}: Started a new game.  Opening hands:{}".format(
+        datetime.datetime.now(), game.dice)]
 
 
 def roll(faces=6):

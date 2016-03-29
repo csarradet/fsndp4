@@ -44,6 +44,8 @@ class Game(ndb.Model):
     #   in that player's hand (may be an empty list if
     #   the player has been eliminated)
     dice = ndb.PickleProperty(required=True)
+    log = ndb.StringProperty(repeated=True)
+
 
     @staticmethod
     def create(player_emails):
