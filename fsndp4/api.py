@@ -209,14 +209,29 @@ class LiarsDiceApi(remote.Service):
         """
         Prereq: function must also be decorated with @login_required/admin_only 
             AND @game_required.
-        Errors out if anyone except the game's "active player" tries to take an action.
+        Errors out if the current user isn't the game's "active player".
         """
         @wraps(func)
         def decorator(*args, **kwargs):
             game = kwargs["game_model"]
             current_user = kwargs["current_user_model"]
-            if not game.active_player_key == current_user.key:
+            if not current_user.key == game.active_player_key:
                 raise endpoints.ForbiddenException('Only the active player can perform that action')
+            return func(*args, **kwargs)
+        return decorator
+
+    def enrolled_player_only(func):
+        """
+        Prereq: function must also be decorated with @login_required/admin_only 
+            AND @game_required.
+        Errors out if the current user isn't in the game's user list.
+        """
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            game = kwargs["game_model"]
+            current_user = kwargs["current_user_model"]
+            if not current_user.key in game.player_keys:
+                raise endpoints.ForbiddenException('Only an enrolled player can perform that action')
             return func(*args, **kwargs)
         return decorator
 
@@ -228,12 +243,12 @@ class LiarsDiceApi(remote.Service):
             http_method="POST",
             path="enroll_user",
             name="users.enroll")
-    @admin_only
+    @login_required
     def enroll_user(self, request, **kwargs):
         """
         Create a new user record in the DB for the logged in user unless one already exists.
         """
-        # The admin_only decorator does all the work here, no need for anything else.
+        # The decorator does all the work here, no need for anything else.
         return message_types.VoidMessage()
 
 
@@ -242,6 +257,7 @@ class LiarsDiceApi(remote.Service):
             http_method="GET",
             path="users",
             name="users.list")
+    @admin_only
     def list_users(self, request):
         """ List all users that have ever interacted with the system """
         response = UserCollection()
@@ -261,9 +277,6 @@ class LiarsDiceApi(remote.Service):
         return message_types.VoidMessage()
 
 
-
-
-
     @endpoints.method(message_types.VoidMessage,
             GameCollection,
             http_method="GET",
@@ -275,7 +288,6 @@ class LiarsDiceApi(remote.Service):
         response = GameCollection()
         response.game_messages = [game_to_message(x) for x in Game.get_all()]
         return response
-
 
 
 
