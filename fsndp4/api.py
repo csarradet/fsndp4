@@ -145,7 +145,8 @@ class LiarsDiceApi(remote.Service):
     
     # Decorator that allows a decorator to decorate a decorator, uses code from:
     # http://stackoverflow.com/questions/5952641/decorating-decorators-try-to-get-my-head-around-understanding-it
-    # (joking aside, this lets us reuse code, as with login_required and admin_only below)
+    # (joking aside, this lets us reuse dec code, as with 
+    #  @login_required and @admin_only below)
     def decdec(inner_dec):
         def ddmain(outer_dec):
             def decwrapper(f):
@@ -183,9 +184,7 @@ class LiarsDiceApi(remote.Service):
         @wraps(func)
         def decorator(*args, **kwargs):
             user = kwargs["current_user_model"]
-            if not user:
-                raise endpoints.UnauthorizedException('Invalid token')
-            if not user.is_admin:
+            if not (user and user.is_admin):
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
             return func(*args, **kwargs)
         return decorator
