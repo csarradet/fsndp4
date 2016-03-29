@@ -145,9 +145,10 @@ class LiarsDiceApi(remote.Service):
     
     # Decorator that allows a decorator to decorate a decorator, uses code from:
     # http://stackoverflow.com/questions/5952641/decorating-decorators-try-to-get-my-head-around-understanding-it
-    # (joking aside, this lets us reuse dec code, as with 
-    #  @login_required and @admin_only below)
+    # (joking aside, this allows one decorator to piggyback off of another,
+    # as with @login_required and @admin_only below)
     def decdec(inner_dec):
+        # Yo dawg, I heard you like decorators...
         def ddmain(outer_dec):
             def decwrapper(f):
                 wrapped = inner_dec(outer_dec(f))
@@ -162,6 +163,7 @@ class LiarsDiceApi(remote.Service):
         """
         Requires that the API user be logged in before calling a method.
         Saves their User instance as a current_user_model kwarg.
+        (all decorated methods should be aware of **kwargs)
         """
         @wraps(func)
         def decorator(*args, **kwargs):
@@ -189,6 +191,34 @@ class LiarsDiceApi(remote.Service):
             return func(*args, **kwargs)
         return decorator
 
+    def game_required(func):
+        """
+        Requires that a valid game_id is provided (typically as a path variable).
+        Saves the instance as a game_model kwarg.
+        """            
+        @wraps(func)
+        def decorator(self, request, *args, **kwargs):
+            game_model = Game.get_by_id(request.game_id)
+            if not game_model:
+                raise endpoints.NotFoundException()
+            kwargs["game_model"] = game_model
+            return func(self, request, *args, **kwargs)
+        return decorator
+
+    def active_player_only(func):
+        """
+        Prereq: function must also be decorated with @login_required/admin_only 
+            AND @game_required.
+        Errors out if anyone except the game's "active player" tries to take an action.
+        """
+        @wraps(func)
+        def decorator(*args, **kwargs):
+            game = kwargs["game_model"]
+            current_user = kwargs["current_user_model"]
+            if not game.active_player_key == current_user.key:
+                raise endpoints.ForbiddenException('Only the active player can perform that action')
+            return func(*args, **kwargs)
+        return decorator
 
 
 
@@ -199,7 +229,7 @@ class LiarsDiceApi(remote.Service):
             path="enroll_user",
             name="users.enroll")
     @admin_only
-    def enroll_user(self, request):
+    def enroll_user(self, request, **kwargs):
         """
         Create a new user record in the DB for the logged in user unless one already exists.
         """
@@ -225,7 +255,7 @@ class LiarsDiceApi(remote.Service):
             path="users",
             name="users.delete")
     @admin_only
-    def delete_users(self, request):
+    def delete_users(self, request, **kwargs):
         """ Wipe all locally stored user info from the database """
         User.delete_all()
         return message_types.VoidMessage()
@@ -258,13 +288,12 @@ class LiarsDiceApi(remote.Service):
         http_method="GET",
         path="games/{game_id}",
         name="games.lookup")
-    @admin_only
-    def lookup_game(self, request):
+    @login_required
+    @game_required
+    @active_player_only
+    def lookup_game(self, request, **kwargs):
         """ Look up one particular active or completed game """
-        game_model = Game.get_by_id(request.game_id)
-        if not game_model:
-            raise endpoints.NotFoundException()
-        return game_to_message(game_model)
+        return game_to_message(kwargs["game_model"])
 
 
     BID_POST_RC = endpoints.ResourceContainer(
@@ -275,7 +304,9 @@ class LiarsDiceApi(remote.Service):
         http_method="POST",
         path="games/{game_id}/bids",
         name="games.bids.post")
-    def place_bid(self, request):
+    @login_required
+    @game_required
+    def place_bid(self, request, **kwargs):
         # TODO: placeholder
         count = self.request.count
         rank = self.request.rank
@@ -283,8 +314,7 @@ class LiarsDiceApi(remote.Service):
         if not game_model:
             raise endpoints.NotFoundException()
 
-        # TODO: taking a detour, need to get logged in user's email address
-        # Trying to extend the admin decorator
+
 
         return message_types.VoidMessage()    
 
@@ -295,7 +325,7 @@ class LiarsDiceApi(remote.Service):
             path="games",
             name="games.delete")
     @admin_only
-    def delete_games(self, request):
+    def delete_games(self, request, **kwargs):
         """ Wipe all active and completed games from the database """
         Game.delete_all()
         return message_types.VoidMessage()
@@ -307,7 +337,7 @@ class LiarsDiceApi(remote.Service):
             path="games",
             name="games.create")
     @admin_only
-    def create_game(self, request):
+    def create_game(self, request, **kwargs):
         """ If the current user is an admin, create a new game containing the provided players """
         if not request.user_messages:
             raise endpoints.BadRequestException("You must specify which players will be participating in the game")
