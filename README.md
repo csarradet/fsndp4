@@ -37,10 +37,15 @@
     <li>Browse to games.lookup and submit with the game ID you copied earlier.  You should see the same game.  Note the "active_player", this should be the first account alphabetically.</li>    <li></li>
     <li>Open an incognito tab in Chrome (ctrl+shift+N on Windows).  Browse to the API again and log in with your second account.</li>
     <li>As the active player, browse to games.hand.get to see your current hand.</li>
-    <li>Browse to games.bids.create and place a new bid (e.g. 1x1).</li>
-    <li></li>
-    <li></li>
-    <li></li>
+    <li>Browse to games.bids.create and place a new opening bid (e.g. 1x1).</li>
+    <li>Control passes to the next player.  That player has three choices:</li>
+    <ol>
+        <li>games.bids.create: Raise the bid (see the overview or source code for betting rules)</li>
+        <li>games.bluff_calls.create: Declare the high bid to be a bluff</li>
+        <li>games.spot_on_calls.create: Declare the high bid to be spot on</li>
+    </ol>
+    <li>Pass control back and forth a few times by bidding and calling.  You should see the number of dice in each player's hand start to tick down.  Check games.logs.lookup as you play to follow along with the action.</li>
+    <li>Eventually one player will run out of dice.  The other player gets a point, and all lost dice are replaced for a new round.</li>
     <li></li>
     <li></li>
     <li></li>

@@ -164,7 +164,7 @@ def call_spot_on(game):
 def turn_complete(game):
     living_player_keys = [x for x in game.dice if game.dice[x]]
     if len(living_player_keys) == 1:
-        round_complete(game, winner=living_player_keys[0])
+        round_complete(game, living_player_keys[0])
     else:
         game.log_entry("Turn complete, rerolling hands")
         reroll_hands(game)
