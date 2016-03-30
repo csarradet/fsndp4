@@ -189,7 +189,7 @@ class LiarsDiceApi(remote.Service):
             except GameLogicError:
                 logging.exception("Invalid game action")
                 raise endpoints.BadRequestException("Invalid game action")
-        return enrolled_player_only_dec
+        return game_logic_dec
 
     # And now advanced decorators that filter down the list of allowed users:
     def admin_only(func):
