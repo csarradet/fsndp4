@@ -36,7 +36,7 @@ def initialize(game):
     Assumes that game.player_keys has already been populated.
     """
     keys = game.player_keys
-    if not keys:
+    if not keys or len(keys) < 2:
         raise ValueError("player_keys has noot been populated")
     game.active_player_key = keys[0]
     reset_scores(game)
@@ -46,7 +46,7 @@ def initialize(game):
 
 
 def roll(faces=6):
-    return randint(1, faces + 1)
+    return randint(1, faces)
 
 
 STARTING_HAND_SIZE = 5
@@ -185,7 +185,7 @@ def game_complete(game, winner_key):
     # TODO: flag the game as inactive
     game.log_entry("Game over, {} wins!".format(
         models.User.email_from_key(winner_key)))
-    game.complete = True
+    game.active = False
 
 def get_count(game, player_key, rank):
     """
