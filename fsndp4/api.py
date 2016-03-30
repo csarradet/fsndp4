@@ -26,7 +26,6 @@ class UserMessage(messages.Message):
 class UserCollection(messages.Message):
     user_messages = messages.MessageField(UserMessage, 1, repeated=True)
 
-
 class ScoreMessage(messages.Message):
     user = messages.MessageField(UserMessage, 1, required=True)
     score = messages.IntegerField(2, required=True)
@@ -135,6 +134,10 @@ def game_to_message(game_model):
     return inst
 
 
+def DEC_KEYS(class):
+    USER = "current_user_model"
+    GAME = "game_model"
+
 # API definitions
 @endpoints.api(name='liars_dice',
         version='v1',
@@ -156,7 +159,7 @@ class LiarsDiceApi(remote.Service):
             if current_user is None:
                 raise endpoints.UnauthorizedException('Invalid token')
             current_user_model = User.get_or_create(current_user.email())
-            kwargs["current_user_model"] = current_user_model
+            kwargs[DEC_KEYS.USER] = current_user_model
             return func(*args, **kwargs)
         return login_required_dec
 
@@ -170,7 +173,7 @@ class LiarsDiceApi(remote.Service):
             game_model = Game.get_by_id(request.game_id)
             if not game_model:
                 raise endpoints.NotFoundException()
-            kwargs["game_model"] = game_model
+            kwargs[DEC_KEYS.GAME] = game_model
             return func(self, request, *args, **kwargs)
         return game_required_dec
 
@@ -199,7 +202,7 @@ class LiarsDiceApi(remote.Service):
         """
         @wraps(func)
         def admin_only_dec(*args, **kwargs):
-            user = kwargs["current_user_model"]
+            user = kwargs[DEC_KEYS.USER]
             if not (user and user.is_admin):
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
             return func(*args, **kwargs)
@@ -212,8 +215,8 @@ class LiarsDiceApi(remote.Service):
         """
         @wraps(func)
         def active_player_only_dec(*args, **kwargs):
-            game = kwargs["game_model"]
-            current_user = kwargs["current_user_model"]
+            game = kwargs[DEC_KEYS.GAME]
+            current_user = kwargs[DEC_KEYS.USER]
             if not current_user.key == game.active_player_key:
                 raise endpoints.ForbiddenException('Only the active player can perform that action')
             return func(*args, **kwargs)
@@ -226,8 +229,8 @@ class LiarsDiceApi(remote.Service):
         """
         @wraps(func)
         def enrolled_player_only_dec(*args, **kwargs):
-            game = kwargs["game_model"]
-            current_user = kwargs["current_user_model"]
+            game = kwargs[DEC_KEYS.GAME]
+            current_user = kwargs[DEC_KEYS.USER]
             if not current_user.key in game.player_keys:
                 raise endpoints.ForbiddenException('Only an enrolled player can perform that action')
             return func(*args, **kwargs)
@@ -306,7 +309,7 @@ class LiarsDiceApi(remote.Service):
     @active_player_only
     def lookup_game(self, request, **kwargs):
         """ Look up one particular active or completed game """
-        return game_to_message(kwargs["game_model"])    
+        return game_to_message(kwargs[DEC_KEYS.GAME])    
 
 
     @endpoints.method(message_types.VoidMessage,
@@ -352,8 +355,8 @@ class LiarsDiceApi(remote.Service):
     @game_logic
     def place_bid(self, request, **kwargs):
         """ The game's active player makes a new high bid """
-        bidder_key = kwargs["current_user_model"].key
-        game = kwargs["game_model"]
+        bidder_key = kwargs[DEC_KEYS.USER].key
+        game = kwargs[DEC_KEYS.GAME]
         new_bid = Bid.create(request.count, request.rank)
         game_logic.place_bid(game, new_bid, bidder_key)
         return message_types.VoidMessage()
@@ -370,7 +373,7 @@ class LiarsDiceApi(remote.Service):
     @game_logic
     def lookup_game(self, request, **kwargs):
         """ Instead of bidding this turn, declare the high bid to be a bluff """
-        game_logic.call_bluff(kwargs["game_model"])
+        game_logic.call_bluff(kwargs[DEC_KEYS.GAME])
 
 
 
