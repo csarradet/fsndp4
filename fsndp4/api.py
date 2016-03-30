@@ -364,7 +364,7 @@ class LiarsDiceApi(remote.Service):
 
 
     @endpoints.method(GAME_LOOKUP_RC,
-        GameMessage,
+        message_types.VoidMessage,
         http_method="POST",
         path="games/{game_id}/bluff_calls",
         name="games.bluff_calls.create")
@@ -372,9 +372,11 @@ class LiarsDiceApi(remote.Service):
     @game_required
     @active_player_only
     @game_logic
-    def lookup_game(self, request, **kwargs):
+    def make_bluff_call(self, request, **kwargs):
         """ Instead of bidding this turn, declare the high bid to be a bluff """
         game_logic.call_bluff(kwargs[DEC_KEYS.GAME])
+        return message_types.VoidMessage()
+
 
 
 
