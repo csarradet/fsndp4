@@ -73,6 +73,7 @@ class Game(ndb.Model):
     high_bidder_key = ndb.KeyProperty(kind=User, default=None)
     high_bid = ndb.StructuredProperty(Bid, default=None)
     log = ndb.StringProperty(repeated=True)
+    active = ndb.BooleanProperty(required=True, default=True)
 
     @staticmethod
     def create(player_emails):
@@ -111,4 +112,3 @@ class Game(ndb.Model):
     def reset_high_bid(self):
         self.high_bid = None
         self.high_bidder_key = None
-        

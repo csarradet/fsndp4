@@ -210,7 +210,7 @@ class LiarsDiceApi(remote.Service):
                 raise endpoints.BadRequestException("Invalid game action")
         return game_logic_dec
 
-    # And now advanced decorators that filter down the list of allowed users:
+    # And now advanced decorators that filter down the list of allowed games/users:
     def admin_only(func):
         """ 
         Prereq: function must already be decorated with @login_required.
@@ -251,6 +251,18 @@ class LiarsDiceApi(remote.Service):
                 raise endpoints.ForbiddenException('Only an enrolled player can perform that action')
             return func(*args, **kwargs)
         return enrolled_player_only_dec
+
+    def active_game_only(func):
+        """
+        Prereq: @game_required
+        """
+        @wraps(func)
+        def active_game_only_dec(*args, **kwargs):
+            game = kwargs[DEC_KEYS.GAME]
+            if not game.active:
+                raise endpoints.ForbiddenException('That game is not active')
+            return func(*args, **kwargs)
+        return active_game_only_dec
 
 
 
@@ -366,6 +378,27 @@ class LiarsDiceApi(remote.Service):
         return create_game_id_message(game.key.id())
 
 
+    @endpoints.method(GAME_LOOKUP_RC,
+        DiceMessage,
+        http_method="GET",
+        path="games/{game_id}/hand",
+        name="games.hand.get")
+    @login_required
+    @game_required
+    @enrolled_player_only
+    def check_hand(self, request, **kwargs):
+        """ Check the current player's hand in the given game """
+        game = kwargs[DEC_KEYS.GAME]
+        user_key = kwargs[DEC_KEYS.USER].key
+        if user_key not in game.dice:
+            raise endpoints.NotFoundException("No hand found for current user in that game")
+        hand = create_dice_message(game.dice[user_key])
+        return hand
+
+
+    # These are the three game-advancing actions that can be taken during
+    # a turn by the active player in an active game:
+
     BID_POST_RC = endpoints.ResourceContainer(
         BidMessage,
         game_id=messages.IntegerField(1, required=True))
@@ -378,6 +411,7 @@ class LiarsDiceApi(remote.Service):
     @game_required
     @active_player_only
     @game_logic
+    @active_game_only
     def place_bid(self, request, **kwargs):
         """ The game's active player makes a new high bid """
         bidder_key = kwargs[DEC_KEYS.USER].key
@@ -396,6 +430,7 @@ class LiarsDiceApi(remote.Service):
     @game_required
     @active_player_only
     @game_logic
+    @active_game_only
     def make_bluff_call(self, request, **kwargs):
         """ Instead of bidding this turn, declare the high bid to be a bluff """
         game_logic.call_bluff(kwargs[DEC_KEYS.GAME])
@@ -403,22 +438,19 @@ class LiarsDiceApi(remote.Service):
 
 
     @endpoints.method(GAME_LOOKUP_RC,
-        DiceMessage,
-        http_method="GET",
-        path="games/{game_id}/hand",
-        name="games.hand.get")
+        message_types.VoidMessage,
+        http_method="POST",
+        path="games/{game_id}/spot_on_calls",
+        name="games.spot_on_calls.create")
     @login_required
     @game_required
-    @enrolled_player_only
-    def check_hand(self, request, **kwargs):
-        """ Check the current player's hand in the given game """
-        game = kwargs[DEC_KEYS.GAME]
-        user_key = kwargs[DEC_KEYS.USER].key
-        if user_key not in game.dice:
-            raise endpoints.NotFoundException("No hand found for current user in that game")
-        hand = create_dice_message(game.dice[user_key])
-        return hand
-
+    @active_player_only
+    @game_logic
+    @active_game_only
+    def make_spot_on_call(self, request, **kwargs):
+        """ Instead of bidding this turn, declare the high bid to be spot on """
+        game_logic.call_spot_on(kwargs[DEC_KEYS.GAME])
+        return message_types.VoidMessage()
 
 
 APP = endpoints.api_server([LiarsDiceApi])
