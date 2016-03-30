@@ -111,13 +111,13 @@ def call_bluff(game):
     If the high bid was a bluff, the high bidder removes one die.
     Otherwise, the active player removes a die.
     """
-    if not game.high_bid and game.high_bidder_key:
+    if not (game.high_bid and game.high_bidder_key):
         raise InvalidMoveError("There are no standing bids")
 
     game.log_entry("{} called a bluff".format(
         game.active_player_email()),
         timestamp=True)
-    actual_count = count_hand(game, game.high_bidder_key, game.high_bid.rank)
+    actual_count = get_count(game, game.high_bidder_key, game.high_bid.rank)
     game.log_entry("{}'s actual hand was {}".format(
         game.high_bidder_email(),
         game.dice[game.high_bidder_key]))
@@ -138,13 +138,13 @@ def call_spot_on(game):
     everyone except the active player removes a die.
     Otherwise, the active player removes a die.
     """
-    if not game.high_bid and game.high_bidder_key:
+    if not (game.high_bid and game.high_bidder_key):
         raise InvalidMoveError("There are no standing bids")
 
     game.log_entry("{} called spot on".format(
         game.active_player_email()),
         timestamp=True)
-    actual_count = count_hand(game, game.high_bidder_key, game.high_bid.rank)
+    actual_count = get_count(game, game.high_bidder_key, game.high_bid.rank)
     game.log_entry("{}'s actual hand was {}".format(
         game.high_bidder_email(),
         game.dice[game.high_bidder_key]))
