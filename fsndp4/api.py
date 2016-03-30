@@ -416,10 +416,9 @@ class LiarsDiceApi(remote.Service):
     @active_game_only
     def place_bid(self, request, **kwargs):
         """ The game's active player makes a new high bid """
-        bidder_key = kwargs[DEC_KEYS.USER].key
         game = kwargs[DEC_KEYS.GAME]
         new_bid = Bid.create(request.count, request.rank)
-        game_logic.place_bid(game, new_bid, bidder_key)
+        game_logic.place_bid(game, new_bid)
         return message_types.VoidMessage()
 
 
