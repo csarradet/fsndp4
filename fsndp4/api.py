@@ -177,7 +177,7 @@ class LiarsDiceApi(remote.Service):
     # And now advanced decorators that filter down the list of allowed users:
     def admin_only(func):
         """ 
-        Prereq: function must also be decorated with @login_required.
+        Prereq: function must already be decorated with @login_required.
         Requires that the API user be flagged as an admin in the datastore.
         """
         @wraps(func)
@@ -190,7 +190,7 @@ class LiarsDiceApi(remote.Service):
 
     def active_player_only(func):
         """
-        Prereq: function must also be decorated with @login_required AND @game_required.
+        Prereq: @login_required AND @game_required.
         Errors out if the current user isn't the game's "active player".
         """
         @wraps(func)
@@ -204,7 +204,7 @@ class LiarsDiceApi(remote.Service):
 
     def enrolled_player_only(func):
         """
-        Prereq: function must also be decorated with @login_required/admin_only AND @game_required.
+        Prereq: @login_required AND @game_required.
         Errors out if the current user isn't in the game's user list.
         """
         @wraps(func)
@@ -274,7 +274,6 @@ class LiarsDiceApi(remote.Service):
         return response
 
 
-
     GAME_LOOKUP_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
         game_id=messages.IntegerField(1, required=True))
@@ -298,7 +297,7 @@ class LiarsDiceApi(remote.Service):
         message_types.VoidMessage,
         http_method="POST",
         path="games/{game_id}/bids",
-        name="games.bids.place")
+        name="games.bids.create")
     @login_required
     @game_required
     @active_player_only
@@ -330,7 +329,7 @@ class LiarsDiceApi(remote.Service):
 
 
     @endpoints.method(UserCollection,
-            message_types.VoidMessage,
+            GameIdMessage,
             http_method="POST",
             path="games",
             name="games.create")
@@ -342,7 +341,7 @@ class LiarsDiceApi(remote.Service):
             raise endpoints.BadRequestException("You must specify which players will be participating in the game")
         player_emails = [x.email for x in request.user_messages]
         game = Game.create(player_emails)
-        return message_types.VoidMessage()
+        return create_game_id_message(game.key.id())
 
 
 
