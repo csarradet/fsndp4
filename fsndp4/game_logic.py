@@ -1,4 +1,3 @@
-import datetime
 from random import randint
 import models
 
@@ -145,13 +144,16 @@ def round_complete(game, winner_key):
     if game.scores[winner_key] >= POINTS_TO_WIN:
         game_complete(game, winner_key)
     else:
-        pass
-        # game.log_entry("Round complete, {} gains a point ({} -> {})".format(
-        #     ))
+        game.log_entry("Round complete, {} gains a point ({} -> {})".format(
+            models.User.email_from_key(winner_key)))
+        game.log_entry("Reloading player hands")
+        refill_hands(game)
 
 
-def game_complete(game):
-    pass
+def game_complete(game, winner_key):
+    # TODO: flag the game as inactive
+    game.log_entry("Game over, {} wins!".format(
+        models.User.email_from_key(winner_key)))
 
 def get_count(game, player_key, rank):
     """

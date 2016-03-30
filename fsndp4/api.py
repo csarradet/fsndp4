@@ -194,11 +194,12 @@ class LiarsDiceApi(remote.Service):
 
     def game_logic(func):
         """
-        Wraps the function in a try block to gracefully and
-        consistently catch GameLogicErrors.
+        Indicates that a function call may fail for game logic reasons,
+        even if the player's input is syntactically valid.
 
         All endpoints that interact with the game logic layer should
-        use this decorator.
+        use this decorator.  Automatically wraps the function in a 
+        try block to gracefully and consistently catch GameLogicErrors.
         """
         @wraps(func)
         def game_logic_dec(*args, **kwargs):
