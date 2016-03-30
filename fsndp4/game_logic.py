@@ -66,7 +66,7 @@ def reroll_hands(game):
 
 BID_COUNTS = range(1, STARTING_HAND_SIZE + 1)
 BID_RANKS = range(1, 7)
-def place_bid(game, new_bid, bidder_key):
+def place_bid(game, new_bid):
     """
     The active player's (possibly fraudulent) assertion that they have at least
     {count} dice showing the face {rank}.
@@ -85,11 +85,11 @@ def place_bid(game, new_bid, bidder_key):
     old_bid = game.high_bid
 
     if not old_bid:
-        __do_place_bid(game, new_bid, bidder_key)
+        __do_place_bid(game, new_bid)
     elif new_bid.count > old_bid.count:
-        __do_place_bid(game, new_bid, bidder_key)
+        __do_place_bid(game, new_bid)
     elif new_bid.count == old_bid.count and new_bid.rank > old_bid.rank:
-        __do_place_bid(game, new_bid, bidder_key)
+        __do_place_bid(game, new_bid)
     else:
         raise InvalidMoveError("Illegal bid")
 
