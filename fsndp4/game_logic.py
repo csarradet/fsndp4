@@ -70,6 +70,7 @@ def place_bid(game, new_bid, bidder_key):
         raise InvalidMoveError("Invalid bid rank")
 
     old_bid = game.high_bid
+
     if not old_bid:
         __do_place_bid(game, new_bid, bidder_key)
     elif new_bid.count > old_bid.count:
@@ -80,6 +81,9 @@ def place_bid(game, new_bid, bidder_key):
         raise InvalidMoveError("Illegal bid")
 
 def __do_place_bid(game, new_bid, bidder_key):
+    """
+    Error checks passed, now actually commit the bid.
+    """
     bidder_email = models.User.email_from_key(bidder_key)
     game.log.append("{}: {} placed the bid {}x{}".format(
         datetime.datetime.now(), bidder_email,

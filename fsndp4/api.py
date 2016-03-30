@@ -26,6 +26,7 @@ class UserMessage(messages.Message):
 class UserCollection(messages.Message):
     user_messages = messages.MessageField(UserMessage, 1, repeated=True)
 
+
 class ScoreMessage(messages.Message):
     user = messages.MessageField(UserMessage, 1, required=True)
     score = messages.IntegerField(2, required=True)
@@ -167,14 +168,14 @@ class LiarsDiceApi(remote.Service):
         (all decorated methods should be aware of **kwargs)
         """
         @wraps(func)
-        def decorator(*args, **kwargs):
+        def login_required_dec(*args, **kwargs):
             current_user = endpoints.get_current_user()
             if current_user is None:
                 raise endpoints.UnauthorizedException('Invalid token')
             current_user_model = User.get_or_create(current_user.email())
             kwargs["current_user_model"] = current_user_model
             return func(*args, **kwargs)
-        return decorator
+        return login_required_dec
 
 
     @decdec(login_required)
@@ -185,12 +186,12 @@ class LiarsDiceApi(remote.Service):
         (implies login_required)
         """
         @wraps(func)
-        def decorator(*args, **kwargs):
+        def admin_only_dec(*args, **kwargs):
             user = kwargs["current_user_model"]
             if not (user and user.is_admin):
                 raise endpoints.ForbiddenException('You must be an admin to perform that action')
             return func(*args, **kwargs)
-        return decorator
+        return admin_only_dec
 
     def game_required(func):
         """
@@ -198,13 +199,13 @@ class LiarsDiceApi(remote.Service):
         Saves the instance as a game_model kwarg.
         """            
         @wraps(func)
-        def decorator(self, request, *args, **kwargs):
+        def game_required_dec(self, request, *args, **kwargs):
             game_model = Game.get_by_id(request.game_id)
             if not game_model:
                 raise endpoints.NotFoundException()
             kwargs["game_model"] = game_model
             return func(self, request, *args, **kwargs)
-        return decorator
+        return game_required_dec
 
     def active_player_only(func):
         """
@@ -213,13 +214,13 @@ class LiarsDiceApi(remote.Service):
         Errors out if the current user isn't the game's "active player".
         """
         @wraps(func)
-        def decorator(*args, **kwargs):
+        def active_player_only_dec(*args, **kwargs):
             game = kwargs["game_model"]
             current_user = kwargs["current_user_model"]
             if not current_user.key == game.active_player_key:
                 raise endpoints.ForbiddenException('Only the active player can perform that action')
             return func(*args, **kwargs)
-        return decorator
+        return active_player_only_dec
 
     def enrolled_player_only(func):
         """
@@ -228,13 +229,13 @@ class LiarsDiceApi(remote.Service):
         Errors out if the current user isn't in the game's user list.
         """
         @wraps(func)
-        def decorator(*args, **kwargs):
+        def enrolled_player_only_dec(*args, **kwargs):
             game = kwargs["game_model"]
             current_user = kwargs["current_user_model"]
             if not current_user.key in game.player_keys:
                 raise endpoints.ForbiddenException('Only an enrolled player can perform that action')
             return func(*args, **kwargs)
-        return decorator
+        return enrolled_player_only_dec
 
 
 

@@ -9,6 +9,11 @@ class User(ndb.Model):
 
     @staticmethod
     def get_or_create(email):
+        """
+        Always use get_or_create instead of standing up your
+        own instances to ensure that the IDs are generated
+        consistently.
+        """
         instance = User.get_by_id(email)
         if not instance:
             instance = User(id=email)
@@ -28,7 +33,8 @@ class User(ndb.Model):
 
     @staticmethod
     def email_from_key(user_key):
-        # TODO: memcache
+        # We could get the user's email from the key itself, but
+        # we want to make sure they actually exist in the DB.
         return user_key.get().email
 
 
@@ -52,7 +58,6 @@ class Game(ndb.Model):
     high_bidder_key = ndb.KeyProperty(kind=User, default=None)
     high_bid = ndb.StructuredProperty(Bid, default=None)
     log = ndb.StringProperty(repeated=True)
-
 
     @staticmethod
     def create(player_emails):
