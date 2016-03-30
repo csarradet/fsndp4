@@ -176,7 +176,9 @@ def round_complete(game, winner_key):
         game_complete(game, winner_key)
     else:
         game.log_entry("Round complete, {} gains a point ({} -> {})".format(
-            models.User.email_from_key(winner_key)))
+            models.User.email_from_key(winner_key),
+            game.scores[winner_key] - 1,
+            game.scores[winner_key]))
         game.log_entry("Reloading player hands")
         refill_hands(game)
 
