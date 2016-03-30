@@ -134,7 +134,8 @@ def game_to_message(game_model):
     return inst
 
 
-def DEC_KEYS(class):
+# Enum listing all key values used by our decorators to add kwarg data
+class DEC_KEYS(object):
     USER = "current_user_model"
     GAME = "game_model"
 
