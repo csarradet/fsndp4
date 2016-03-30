@@ -57,9 +57,11 @@ def reset_scores(game):
     game.scores = {x: 0 for x in game.player_keys}
 
 def refill_hands(game):
+    game.reset_high_bid()
     game.dice = {x: roll_hand() for x in game.player_keys}
 
 def reroll_hands(game):
+    game.reset_high_bid()
     game.dice = {x: roll_hand(hand_size=len(game.dice[x])) for x in game.player_keys}
 
 BID_COUNTS = range(1, STARTING_HAND_SIZE + 1)
@@ -120,15 +122,44 @@ def call_bluff(game):
         game.high_bidder_email(),
         game.dice[game.high_bidder_key]))
     if actual_count < game.high_bid.count:
-        game.log_entry("It was a bluff!  {} loses a die".format(
+        game.log_entry("Correct!  {} loses a die".format(
             game.high_bidder_email()))
         remove_die(game, game.high_bidder_key)
     else:
-        game.log_entry("It wasn't a bluff!  {} loses a die".format(
+        game.log_entry("Incorrect!  {} loses a die".format(
             game.active_player_email()))
         remove_die(game, game.active_player_key)
     turn_complete(game)
     game.put()
+
+def call_spot_on(game):
+    """
+    If the high bidder has exactly {count} dice of face {rank},
+    everyone except the active player removes a die.
+    Otherwise, the active player removes a die.
+    """
+    if not game.high_bid and game.high_bidder_key:
+        raise InvalidMoveError("There are no standing bids")
+
+    game.log_entry("{} called spot on".format(
+        game.active_player_email()),
+        timestamp=True)
+    actual_count = count_hand(game, game.high_bidder_key, game.high_bid.rank)
+    game.log_entry("{}'s actual hand was {}".format(
+        game.high_bidder_email(),
+        game.dice[game.high_bidder_key]))
+    if actual_count == game.high_bid.count:
+        game.log_entry("Correct!  Everyone else loses a die")
+        for pk in game.player_keys:
+            if pk != game.active_player_key:
+                remove_die(game, pk)
+    else:
+        game.log_entry("Incorrect!  {} loses a die".format(
+            game.active_player_email()))
+        remove_die(game, game.active_player_key)
+    turn_complete(game)
+    game.put()
+
 
 def turn_complete(game):
     living_player_keys = [x for x in game.dice if game.dice[x]]
@@ -165,14 +196,6 @@ def get_count(game, player_key, rank):
 
 def remove_die(game, player_key):
     del game.dice[player_key][0]
-
-def call_spot_on(game):
-    """
-    If the high bidder has exactly {count} dice of face {rank},
-    everyone except the active player removes a die.
-    Otherwise, the active player removes a die.
-    """
-    raise UnimplementedFeatureError("Not yet implemented")
 
 def assign_next_player(game):
     """

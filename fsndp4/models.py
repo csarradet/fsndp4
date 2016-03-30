@@ -108,3 +108,7 @@ class Game(ndb.Model):
     def high_bidder_email(self):
         return User.email_from_key(self.high_bidder_key)
 
+    def reset_high_bid(self):
+        self.high_bid = None
+        self.high_bidder_key = None
+        
