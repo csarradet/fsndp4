@@ -91,5 +91,17 @@ class Game(ndb.Model):
         keys = Game.query().fetch(keys_only=True)
         ndb.delete_multi(keys)
 
-    def add_point(self, player_key):
-        self.scores[player] += 1
+    # Typically, you should only timestamp the first log
+    # entry in a player-server interaction
+    def log_entry(self, text, timestamp=False):
+        if timestamp:
+            self.log.append("At time {}:".format(
+                datetime.datetime.now()))
+        self.log.append(text)
+
+    def active_player_email(self):
+        return User.email_from_key(self.active_player_key)
+
+    def high_bidder_email(self):
+        return User.email_from_key(self.high_bidder_key)
+
