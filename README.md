@@ -37,7 +37,7 @@
     <li>Browse to games.lookup and submit with the game ID you copied earlier.  You should see the same game.  Note the "active_player", this should be the first account alphabetically.</li>    <li></li>
     <li>Open an incognito tab in Chrome (ctrl+shift+N on Windows).  Browse to the API again and log in with your second account.</li>
     <li>As the active player, browse to games.hand.get to see your current hand.</li>
-    <li></li>
+    <li>Browse to games.bids.create and place a new bid (e.g. 1x1).</li>
     <li></li>
     <li></li>
     <li></li>
