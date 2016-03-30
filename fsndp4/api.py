@@ -143,24 +143,7 @@ def game_to_message(game_model):
         )
 class LiarsDiceApi(remote.Service):
 
-    # Define API method decorators
-    
-    # Decorator that allows a decorator to decorate a decorator, uses code from:
-    # http://stackoverflow.com/questions/5952641/decorating-decorators-try-to-get-my-head-around-understanding-it
-    # (joking aside, this allows one decorator to piggyback off of another,
-    # as with @login_required and @admin_only below)
-    def decdec(inner_dec):
-        # Yo dawg, I heard you like decorators...
-        def ddmain(outer_dec):
-            def decwrapper(f):
-                wrapped = inner_dec(outer_dec(f))
-                def fwrapper(*args, **kwargs):
-                   return wrapped(*args, **kwargs)
-                return fwrapper
-            return decwrapper
-        return ddmain
-
-
+    # Define API method decorators.  First, the basic ones with no prerequisites:    
     def login_required(func):
         """
         Requires that the API user be logged in before calling a method.
@@ -177,22 +160,6 @@ class LiarsDiceApi(remote.Service):
             return func(*args, **kwargs)
         return login_required_dec
 
-
-    @decdec(login_required)
-    def admin_only(func):
-        """ 
-        Requires that the API user be logged in and flagged as an admin in the datastore.
-        Saves the instance as a current_user_model kwarg.
-        (implies login_required)
-        """
-        @wraps(func)
-        def admin_only_dec(*args, **kwargs):
-            user = kwargs["current_user_model"]
-            if not (user and user.is_admin):
-                raise endpoints.ForbiddenException('You must be an admin to perform that action')
-            return func(*args, **kwargs)
-        return admin_only_dec
-
     def game_required(func):
         """
         Requires that a valid game_id is provided (typically as a path variable).
@@ -207,10 +174,23 @@ class LiarsDiceApi(remote.Service):
             return func(self, request, *args, **kwargs)
         return game_required_dec
 
+    # And now advanced decorators that filter down the list of allowed users:
+    def admin_only(func):
+        """ 
+        Prereq: function must also be decorated with @login_required.
+        Requires that the API user be flagged as an admin in the datastore.
+        """
+        @wraps(func)
+        def admin_only_dec(*args, **kwargs):
+            user = kwargs["current_user_model"]
+            if not (user and user.is_admin):
+                raise endpoints.ForbiddenException('You must be an admin to perform that action')
+            return func(*args, **kwargs)
+        return admin_only_dec
+
     def active_player_only(func):
         """
-        Prereq: function must also be decorated with @login_required/admin_only 
-            AND @game_required.
+        Prereq: function must also be decorated with @login_required AND @game_required.
         Errors out if the current user isn't the game's "active player".
         """
         @wraps(func)
@@ -224,8 +204,7 @@ class LiarsDiceApi(remote.Service):
 
     def enrolled_player_only(func):
         """
-        Prereq: function must also be decorated with @login_required/admin_only 
-            AND @game_required.
+        Prereq: function must also be decorated with @login_required/admin_only AND @game_required.
         Errors out if the current user isn't in the game's user list.
         """
         @wraps(func)
@@ -259,6 +238,7 @@ class LiarsDiceApi(remote.Service):
             http_method="GET",
             path="users",
             name="users.list")
+    @login_required
     @admin_only
     def list_users(self, request):
         """ List all users that have ever interacted with the system """
@@ -272,6 +252,7 @@ class LiarsDiceApi(remote.Service):
             http_method="DELETE",
             path="users",
             name="users.delete")
+    @login_required
     @admin_only
     def delete_users(self, request, **kwargs):
         """ Wipe all locally stored user info from the database """
@@ -284,6 +265,7 @@ class LiarsDiceApi(remote.Service):
             http_method="GET",
             path="games",
             name="games.list")
+    @login_required
     @admin_only
     def list_games(self, request, **kwargs):
         """ List all active and completed games """
@@ -339,6 +321,7 @@ class LiarsDiceApi(remote.Service):
             http_method="DELETE",
             path="games",
             name="games.delete")
+    @login_required
     @admin_only
     def delete_games(self, request, **kwargs):
         """ Wipe all active and completed games from the database """
@@ -351,6 +334,7 @@ class LiarsDiceApi(remote.Service):
             http_method="POST",
             path="games",
             name="games.create")
+    @login_required
     @admin_only
     def create_game(self, request, **kwargs):
         """ If the current user is an admin, create a new game containing the provided players """
