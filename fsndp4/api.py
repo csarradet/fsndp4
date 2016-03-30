@@ -174,6 +174,23 @@ class LiarsDiceApi(remote.Service):
             return func(self, request, *args, **kwargs)
         return game_required_dec
 
+    def game_logic(func):
+        """
+        Wraps the function in a try block to gracefully and
+        consistently catch GameLogicErrors.
+
+        All endpoints that interact with the game logic layer should
+        use this decorator.
+        """
+        @wraps(func)
+        def game_logic_dec(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except GameLogicError:
+                logging.exception("Invalid game action")
+                raise endpoints.BadRequestException("Invalid game action")
+        return enrolled_player_only_dec
+
     # And now advanced decorators that filter down the list of allowed users:
     def admin_only(func):
         """ 
@@ -215,6 +232,8 @@ class LiarsDiceApi(remote.Service):
                 raise endpoints.ForbiddenException('Only an enrolled player can perform that action')
             return func(*args, **kwargs)
         return enrolled_player_only_dec
+
+
 
 
 
@@ -287,32 +306,7 @@ class LiarsDiceApi(remote.Service):
     @active_player_only
     def lookup_game(self, request, **kwargs):
         """ Look up one particular active or completed game """
-        return game_to_message(kwargs["game_model"])
-
-
-    BID_POST_RC = endpoints.ResourceContainer(
-        BidMessage,
-        game_id=messages.IntegerField(1, required=True))
-    @endpoints.method(BID_POST_RC,
-        message_types.VoidMessage,
-        http_method="POST",
-        path="games/{game_id}/bids",
-        name="games.bids.create")
-    @login_required
-    @game_required
-    @active_player_only
-    def place_bid(self, request, **kwargs):
-        bidder_key = kwargs["current_user_model"].key
-        game = kwargs["game_model"]
-        new_bid = Bid()
-        new_bid.count = request.count
-        new_bid.rank = request.rank
-        try:
-            game_logic.place_bid(game, new_bid, bidder_key)
-        except GameLogicError:
-            logging.exception("Invalid action")
-            raise endpoints.BadRequestException("Invalid action")
-        return message_types.VoidMessage()    
+        return game_to_message(kwargs["game_model"])    
 
 
     @endpoints.method(message_types.VoidMessage,
@@ -342,6 +336,41 @@ class LiarsDiceApi(remote.Service):
         player_emails = [x.email for x in request.user_messages]
         game = Game.create(player_emails)
         return create_game_id_message(game.key.id())
+
+
+    BID_POST_RC = endpoints.ResourceContainer(
+        BidMessage,
+        game_id=messages.IntegerField(1, required=True))
+    @endpoints.method(BID_POST_RC,
+        message_types.VoidMessage,
+        http_method="POST",
+        path="games/{game_id}/bids",
+        name="games.bids.create")
+    @login_required
+    @game_required
+    @active_player_only
+    @game_logic
+    def place_bid(self, request, **kwargs):
+        """ The game's active player makes a new high bid """
+        bidder_key = kwargs["current_user_model"].key
+        game = kwargs["game_model"]
+        new_bid = Bid.create(request.count, request.rank)
+        game_logic.place_bid(game, new_bid, bidder_key)
+        return message_types.VoidMessage()
+
+
+    @endpoints.method(GAME_LOOKUP_RC,
+        GameMessage,
+        http_method="POST",
+        path="games/{game_id}/bluff_calls",
+        name="games.bluff_calls.create")
+    @login_required
+    @game_required
+    @active_player_only
+    @game_logic
+    def lookup_game(self, request, **kwargs):
+        """ Instead of bidding this turn, declare the high bid to be a bluff """
+        game_logic.call_bluff(kwargs["game_model"])
 
 
 

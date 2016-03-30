@@ -24,7 +24,11 @@ class GameRosterError(GameLogicError):
     """
     pass
 
-
+class UnimplementedFeatureError(GameLogicError):
+    """
+    This game feature hasn't been fully implemented yet.
+    """
+    pass
 
 
 def initialize(game):
@@ -102,7 +106,7 @@ def call_bluff(game):
     If the high bid was a bluff, the high bidder removes one die.
     Otherwise, the active player removes a die.
     """
-    pass
+    raise UnimplementedFeatureError("Not yet implemented")
 
 def call_spot_on(game):
     """
@@ -110,14 +114,14 @@ def call_spot_on(game):
     everyone except the active player removes a die.
     Otherwise, the active player removes a die.
     """
-    pass
+    raise UnimplementedFeatureError("Not yet implemented")
 
 def remove_die(game, player):
     """
     When a player's last die is removed, they're eliminated from
     this round.  Check to see if there are still active players.
     """
-    pass
+    raise UnimplementedFeatureError("Not yet implemented")
 
 def assign_next_player(game):
     """
