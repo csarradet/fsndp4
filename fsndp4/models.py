@@ -42,6 +42,18 @@ class Bid(ndb.Model):
     count = ndb.IntegerProperty(required=True)
     rank = ndb.IntegerProperty(required=True)
 
+    @staticmethod
+    def create(count, rank):
+        """ 
+        Bids typically aren't stored in the DB on their own,
+        so this function doesn't automatically put() the
+        newly created instance.
+        """
+        inst = Bid()
+        inst.count = count
+        inst.rank = rank
+        return inst
+
 
 class Game(ndb.Model):
     # List of ndb keys for all players in this game
