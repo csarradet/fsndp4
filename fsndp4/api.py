@@ -44,10 +44,9 @@ class GameMessage(messages.Message):
     """ Only includes info that should be visible to the active player """
     score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
     active_player = messages.MessageField(UserMessage, 2, required=True)
-    active_player_hand = messages.MessageField(DiceMessage, 3, required=True)
-    high_bidder = messages.MessageField(UserMessage, 4)
-    high_bid = messages.MessageField(BidMessage, 5)
-    game_id = messages.MessageField(GameIdMessage, 6, required=True)
+    high_bidder = messages.MessageField(UserMessage, 3)
+    high_bid = messages.MessageField(BidMessage, 4)
+    game_id = messages.MessageField(GameIdMessage, 5, required=True)
 
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
@@ -109,12 +108,12 @@ def game_to_message(game_model):
             email, game_model.scores[key])
         inst.score_messages.append(score_message)
 
-    # The active player's hand (and only *their* hand) is public info
+    # The active player's identity is public info
     active_player_email = User.email_from_key(
         game_model.active_player_key)
     inst.active_player = create_user_message(active_player_email)
-    inst.active_player_hand = create_dice_message(
-        game_model.dice[game_model.active_player_key])
+    # inst.active_player_hand = create_dice_message(
+    #     game_model.dice[game_model.active_player_key])
 
     # The high bid/bidder are public info
     hbkey = game_model.high_bidder_key
@@ -377,6 +376,23 @@ class LiarsDiceApi(remote.Service):
         game_logic.call_bluff(kwargs[DEC_KEYS.GAME])
         return message_types.VoidMessage()
 
+
+    @endpoints.method(GAME_LOOKUP_RC,
+        DiceMessage,
+        http_method="GET",
+        path="games/{game_id}/hand",
+        name="games.hand.get")
+    @login_required
+    @game_required
+    @enrolled_player_only
+    def check_hand(self, request, **kwargs):
+        """ Check the current player's hand in the given game """
+        game = kwargs[DEC_KEYS.GAME]
+        user_key = kwargs[DEC_KEYS.USER].key
+        if user_key not in game.dice:
+            raise endpoints.NotFoundException("No hand found for current user in that game")
+        hand = create_dice_message(game.dice[user_key])
+        return hand
 
 
 
