@@ -3,7 +3,6 @@ import webapp2
 
 import api
 
-
 class SendReminderEmail(webapp2.RequestHandler):
     def get(self):
         """Send a reminder email to each User with an email about games.

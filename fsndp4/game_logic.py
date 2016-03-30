@@ -25,6 +25,8 @@ class GameRosterError(GameLogicError):
     pass
 
 
+
+
 def initialize(game):
     """
     Performs all tasks required to prepare the game for play.
@@ -41,7 +43,7 @@ def initialize(game):
 
 
 def roll(faces=6):
-    return randint(1,faces)
+    return randint(1, faces + 1)
 
 
 STARTING_HAND_SIZE = 5
@@ -82,8 +84,6 @@ def __do_place_bid(game, new_bid, bidder_key):
     game.log.append("{}: {} placed the bid {}x{}".format(
         datetime.datetime.now(), bidder_email,
         new_bid.count, new_bid.rank))
-    # game.high_bid.count = new_bid.count
-    # game.high_bid.rank = new_bid.rank
     game.high_bid = new_bid
     game.high_bidder_key = bidder_key
     assign_next_player(game)
@@ -127,6 +127,8 @@ def assign_next_player(game):
 def __choose_next_player(game):
     # Concatenate the player list against itself to catch the case
     # where a player is last in the list.
+
+    # TODO: Add check for player's dice count
     iter_players = game.player_keys + game.player_keys
     curr_key = game.active_player_key
     if curr_key not in iter_players:
