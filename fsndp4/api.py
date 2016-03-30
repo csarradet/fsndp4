@@ -288,7 +288,6 @@ class LiarsDiceApi(remote.Service):
             path="games",
             name="games.list")
     @login_required
-    @admin_only
     def list_games(self, request, **kwargs):
         """ List all active and completed games """
         response = GameCollection()
@@ -306,7 +305,6 @@ class LiarsDiceApi(remote.Service):
         name="games.lookup")
     @login_required
     @game_required
-    @active_player_only
     def lookup_game(self, request, **kwargs):
         """ Look up one particular active or completed game """
         return game_to_message(kwargs[DEC_KEYS.GAME])    
