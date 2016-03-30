@@ -51,9 +51,19 @@ class GameMessage(messages.Message):
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
 
+class LogMessage(messages.Message):
+    entry = messages.StringField(1, required=True)
+
+class LogCollection(messages.Message):
+    log_messages = messages.MessageField(LogMessage, 1, repeated=True)
 
 
 # Helper methods for message creation
+def create_log_message(log_entry_str):
+    inst = LogMessage()
+    inst.entry = log_entry_str
+    return inst
+
 def create_user_message(email_str):
     if not email_str:
         return None
@@ -92,6 +102,11 @@ def create_game_id_message(gid):
 # Helper methods for converting models into messages
 def user_to_message(user_model):
     return create_user_message(user_model.email)
+
+def game_to_log_collection(game_model):
+    container = LogCollection()
+    container.log_messages = [create_log_message(x) for x in game_model.log]
+    return container
 
 def game_to_message(game_model):
     inst = GameMessage()
@@ -308,6 +323,17 @@ class LiarsDiceApi(remote.Service):
     def lookup_game(self, request, **kwargs):
         """ Look up one particular active or completed game """
         return game_to_message(kwargs[DEC_KEYS.GAME])    
+
+    @endpoints.method(GAME_LOOKUP_RC,
+        LogCollection,
+        http_method="GET",
+        path="games/{game_id}/logs",
+        name="games.logs.lookup")
+    @login_required
+    @game_required
+    def lookup_game_logs(self, request, **kwargs):
+        """ List the log entries for an active or completed game """
+        return game_to_log_collection(kwargs[DEC_KEYS.GAME])    
 
 
     @endpoints.method(message_types.VoidMessage,
