@@ -52,7 +52,7 @@
     </ol>
     <li>Pass control back and forth a few times by bidding and calling.  You should see the number of dice in each player's hand start to tick down.  Check games.logs.lookup as you play to follow along with the action.</li>
     <li>Eventually one player will run out of dice.  The other player gets a point, and all lost dice are replaced for a new round.</li>
-    <li>The game is over when a player has five points.  The fastest way to simulate this is to only bid 5x6, using a sacrificial account to make bad bluff/spot on calls every turn.</li>
+    <li>The game is over when a player has two points.  The fastest way to simulate this is to only bid 5x6, using a sacrificial account to make bad bluff/spot on calls every turn.</li>
 </ul>
 
 <h2>Endpoints</h2>

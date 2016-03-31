@@ -184,7 +184,6 @@ def round_complete(game, winner_key):
 
 
 def game_complete(game, winner_key):
-    # TODO: flag the game as inactive
     game.log_entry("Game over, {} wins!".format(
         models.User.email_from_key(winner_key)))
     game.winner_key = winner_key

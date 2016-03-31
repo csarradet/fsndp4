@@ -446,8 +446,9 @@ class LiarsDiceApi(remote.Service):
         return hand
 
 
-    def get_key(item):
+    def get_key(self, item):
         return item[1]
+
     @endpoints.method(message_types.VoidMessage,
             LeaderboardCollection,
             http_method="GET",
@@ -460,17 +461,17 @@ class LiarsDiceApi(remote.Service):
         for user in User.get_all():
             games_played = 0
             games_won = 0            
-            result = Game.query(Game.player_keys.IN(user.key)).fetch()
+            result = Game.query(Game.active == False, Game.player_keys.IN([user.key])).fetch()
             if result:
                 games_played = float(len(result))
             
-            result = Game.query(Game.winner_key == user.key).fetch()
+            result = Game.query(Game.active == False, Game.winner_key == user.key).fetch()
             if result:
                 games_won = float(len(result))
 
             win_perc = games_won / games_played
             standings.append((user, win_perc))
-        sorted_standings = sorted(standings, key=getKey)
+        sorted_standings = sorted(standings, key=self.get_key)
         return create_leaderboard_collection(sorted_standings)
 
 
