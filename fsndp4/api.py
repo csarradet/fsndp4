@@ -414,9 +414,9 @@ class LiarsDiceApi(remote.Service):
             raise endpoints.BadRequestException("You must specify which players will be participating in the game")
         player_emails = []
         for i in request.user_messages:
-            if i in player_emails:
+            if i.email in player_emails:
                 raise endpoints.BadRequestException("Duplicate email address: {}".format(i))
-            player_emails.append(i)
+            player_emails.append(i.email)
         if len(player_emails) < 2:
             raise endpoints.BadRequestException("You must submit at least two players")
         game = Game.create(player_emails)

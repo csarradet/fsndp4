@@ -23,6 +23,12 @@
     <li>In the left sidebar, click Entities</li>
     <li>Click the entity matching your email address</li>
     <li>Change is_admin to True, then click save</li>
+    <li>Clear memcache to ensure your app sees the new User data:</li>
+    <ul>
+        <li>From the top-left menu, click App Engine</li>
+        <li>Click Memcache</li>
+        <li>Click Flush Cache and confirm</li>
+    </ul>
 </ul>
 
 <h2>Sample Game</h2>
