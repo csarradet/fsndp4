@@ -1,0 +1,21 @@
+What additional properties did you add to your models and why?
+
+I already have experience working with NDB, so I jumped right into my own implementation rather than starting with the provided guess-a-number game.  I did have to evolve the model definitions as I added features, though:
+ - user.is_admin: Added to provide basic access control to sensitive areas of the app
+ - Game.winner_key: At first I didn't realize I would have to implement a leaderboard.  My existing definition would have made this impractical -- I considered adding another task queue job to update the scores overnight, but wound up tagging the winner on the game entity instead.  That allows us to simply query for games where winner_key is defined, instead of looping through every game and checking the scores array (which can't be queried directly, unless I'm mistaken).
+ - Game.active: Added to allow us to easily build a list of games that are still ongoing for a user.  This was implemented before winner_key; in retrospect this could probably be removed, but allows the possibility for a game to be turned off for other reasons besides a win.
+ - Game.updated: Added to allow us to build the "stale games" list in the task queue.  I also had to add an index, since we're using a comparison operator to compare dates.
+
+******
+
+What were some of the trade-offs or struggles you faced when implementing the new game logic?
+
+I wavered a bit on whether to use fully-fledged User objects or just their email address strings (I believe it changed back and forth a few times early in the revision history).  I like the solution I wound up at -- it's not the most performant option due to extra database traffic, but using keys and polling the DB when user info is needed helps with consistency and is less fragile if we need to change it down the road.  Memcache also helps offset the DB traffic -- in my testing, its rate floated around 80-90%.
+
+I wasn't completely clear on which areas of the app should be accessible to elevated users only -- I made educated guesses as I went, but in retrospect game creation should probably be accessible to any registered user.
+
+As I noted above, the leaderboards requirement caused a bit of a headache.  I considered adding a tiebreaker based on the total number of points scored, but that would require crawling the entire collection of Game entities to inspect their score arrays (discarding the gains we made by adding the Game.winner_key element).  Discarded as impractical.
+
+I also made an effort to leverage decorators more heavily on this project; very glad I did.  I'm quite happy with how the API decorators turned out -- they function as mixins providing the ability to safely define an endpoint method with only one or two lines of code, including access controls and error correction.
+
+After working with Python for a few years, its dynamic typing is finally growing on me.  I was reminded of this when I had to start defining classes for every request again in Endpoints.  Definitely not fun, though I tried to minimize the impact of evolving model design through the builder methods just below the Message classes.  I wonder now if there's already a library that generates these class definitions from an NDB model automatically -- probably should have checked on that when I started.
