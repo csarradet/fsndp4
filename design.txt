@@ -16,6 +16,6 @@ I wasn't completely clear on which areas of the app should be accessible to elev
 
 As I noted above, the leaderboards requirement caused a bit of a headache.  I considered adding a tiebreaker based on the total number of points scored, but that would require crawling the entire collection of Game entities to inspect their score arrays (discarding the gains we made by adding the Game.winner_key element).  Discarded as impractical.
 
-I also made an effort to leverage decorators more heavily on this project; very glad I did.  I'm quite happy with how the API decorators turned out -- they function as mixins providing the ability to safely define an endpoint method with only one or two lines of code, including access controls and error correction.
+I made an effort to leverage decorators more heavily on this project; very glad I did.  I'm quite happy with how the API decorators turned out -- they function as mixins providing the ability to safely define an endpoint method with only one or two lines of code, including access controls and error correction.
 
 After working with Python for a few years, its dynamic typing is finally growing on me.  I was reminded of this when I had to start defining classes for every request again in Endpoints.  Definitely not fun, though I tried to minimize the impact of evolving model design through the builder methods just below the Message classes.  I wonder now if there's already a library that generates these class definitions from an NDB model automatically -- probably should have checked on that when I started.

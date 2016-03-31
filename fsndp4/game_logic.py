@@ -7,26 +7,21 @@ class GameLogicError(Exception):
     """
     Top-level exception for all errors raised by our game logic layer.
     Calling methods can safely catch this if they don't care exactly
-    why an action was rejected.
+    why an action was rejected, since all methods here will throw
+    a subclass of it.
     """
     pass
 
 class InvalidMoveError(GameLogicError):
-    """ 
-    The player attempted a move that was illegal according to the game rules. 
-    """
+    """ The player attempted a move that was illegal according to the game rules. """
     pass
 
 class GameRosterError(GameLogicError):
-    """
-    There's something wrong with the game's internal player roster.
-    """
+    """ There's something wrong with the game's internal player roster. """
     pass
 
 class UnimplementedFeatureError(GameLogicError):
-    """
-    This game feature hasn't been fully implemented yet.
-    """
+    """ This game feature hasn't been fully implemented yet. """
     pass
 
 
@@ -46,21 +41,26 @@ def initialize(game):
 
 
 def roll(faces=6):
+    """ Simulates rolling a die with {n} faces. """
     return randint(1, faces)
 
 
 STARTING_HAND_SIZE = 5
 def roll_hand(hand_size=STARTING_HAND_SIZE):
+    """ Rolls a new starting hand """
     return [roll() for x in range(hand_size)]
 
 def reset_scores(game):
+    """ Initializes the game's scores array so it can be incremented later. """
     game.scores = {x: 0 for x in game.player_keys}
 
 def refill_hands(game):
+    """ Rolls a new starting hand for all players in the game (new round). """
     game.reset_high_bid()
     game.dice = {x: roll_hand() for x in game.player_keys}
 
 def reroll_hands(game):
+    """ Rerolls all player hands, -without- replacing missing die (new turn) """
     game.reset_high_bid()
     game.dice = {x: roll_hand(hand_size=len(game.dice[x])) for x in game.player_keys}
 
@@ -198,11 +198,12 @@ def get_count(game, player_key, rank):
     return len([x for x in hand if x==rank])
 
 def remove_die(game, player_key):
+    """ Physically removes a die from a player's pool, so that subsequent rolls will be weaker. """
     del game.dice[player_key][0]
 
 def assign_next_player(game):
     """
-    Someone has taken an action; move the game along by selecting
+    Someone has made a bid; move the game along by selecting
     the new active player.
     """
     new_key = __choose_next_player(game)
@@ -210,10 +211,14 @@ def assign_next_player(game):
 
 
 def __choose_next_player(game):
-    # Concatenate the player list against itself to catch the case
-    # where a player is last in the list.
+    """
+    Since we only choose a new player after a bid, it should be safe to
+    skip over players with empty hands here (we won't get stuck in a weird
+    loop since a player can't be eliminated until a non-bid action is taken.)
 
-    # TODO: Add check for player's dice count
+    Concatenates the player list against itself to catch the case
+    where a player is last in the list.
+    """
     iter_players = game.player_keys + game.player_keys
     curr_key = game.active_player_key
     if curr_key not in iter_players:
@@ -222,8 +227,9 @@ def __choose_next_player(game):
     pick_next = False
     for i in iter_players:
         if pick_next:
-            return i
-        if curr_key == i:
+            if game.scores[i]:
+                return i
+        elif curr_key == i:
             pick_next = True
     raise AssertionError("Unable to choose next player")
 

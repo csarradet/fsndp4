@@ -7,6 +7,9 @@ import game_logic
 
 
 class User(ndb.Model):
+    """
+    A person who has logged in with a Google account and interacted with our server in some way.
+    """
     email = ndb.StringProperty(required=True)
     is_admin = ndb.BooleanProperty(default=False)
 
@@ -36,12 +39,18 @@ class User(ndb.Model):
 
     @staticmethod
     def email_from_key(user_key):
+        """ Given a User key, return the email address associated with its instance """
         # We could get the user's email from the key itself, but
         # we want to make sure they actually exist in the DB.
         return user_key.get().email
 
 
 class Bid(ndb.Model):
+    """ 
+    Usually just used as a structured property for Game.
+    A bid is a (possibly fraudulent) assertion that a player's
+    hand contains at least {count} dice whose face reads {rank}
+    """
     count = ndb.IntegerProperty(required=True, indexed=False)
     rank = ndb.IntegerProperty(required=True, indexed=False)
 
@@ -59,6 +68,9 @@ class Bid(ndb.Model):
 
 
 class Game(ndb.Model):
+    """
+    Encapsulates a game state, its participants, and all required scoring info.
+    """
     # List of ndb keys for all players in this game
     player_keys = ndb.KeyProperty(kind=User, repeated=True)
     active_player_key = ndb.KeyProperty(kind=User, required=True)
@@ -97,6 +109,7 @@ class Game(ndb.Model):
 
     @staticmethod
     def get_pending(user_model):
+        """ Get all games that are waiting for {user} to make a move """
         q = Game.query(
             Game.active == True, 
             Game.active_player_key == user_model.key)
@@ -110,11 +123,13 @@ class Game(ndb.Model):
     # Typically, you should only timestamp the first log
     # entry in a player-server interaction
     def log_entry(self, text, timestamp=False):
+        """ Saves an important event to the game's logfile """
         if timestamp:
             self.log.append("At time {}:".format(
                 datetime.datetime.now()))
         self.log.append(text)
 
+    # Convenience methods to help clean up game_logic code
     def active_player_email(self):
         return User.email_from_key(self.active_player_key)
 

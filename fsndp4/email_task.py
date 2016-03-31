@@ -1,6 +1,6 @@
 """
 Email alerting system for users that have pending moves on old games
-(>24 hours since last update).
+(at least 24 hours since last update).
 
 Uses a task queue since the query/email process may take awhile; other
 modules should call start() to kick off a job.

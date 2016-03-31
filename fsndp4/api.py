@@ -1,3 +1,7 @@
+"""
+Endpoints API used to expose our service to external clients.
+"""
+
 from functools import wraps
 import logging
 
@@ -41,7 +45,6 @@ class GameIdMessage(messages.Message):
     value = messages.IntegerField(1, required=True)
 
 class GameMessage(messages.Message):
-    """ Only includes info that should be visible to the active player """
     score_messages = messages.MessageField(ScoreMessage, 1, repeated=True)
     active_player = messages.MessageField(UserMessage, 2, required=True)
     high_bidder = messages.MessageField(UserMessage, 3)
@@ -135,6 +138,9 @@ def game_to_log_collection(game_model):
     return container
 
 def game_to_message(game_model):
+    """
+    Since anyone can look up a game, only pull info that should be publicly available.
+    """
     inst = GameMessage()
 
     # Game ID is public, and will be needed to post moves
@@ -182,7 +188,7 @@ class DEC_KEYS(object):
     USER = "current_user_model"
     GAME = "game_model"
 
-# API definitions
+# API definition
 @endpoints.api(name='liars_dice',
         version='v1',
         description="Liar's Dice API",
@@ -190,7 +196,7 @@ class DEC_KEYS(object):
         )
 class LiarsDiceApi(remote.Service):
 
-    # Define API method decorators.  First, the basic ones with no prerequisites:    
+    # API mixin decorators.  First, the basic ones with no prerequisites:    
     def login_required(func):
         """
         Requires that the API user be logged in before calling a method.
@@ -243,7 +249,7 @@ class LiarsDiceApi(remote.Service):
     def admin_only(func):
         """ 
         Prereq: function must already be decorated with @login_required.
-        Requires that the API user be flagged as an admin in the datastore.
+        Errors out if the current user isn't flagged as an admin in the datastore.
         """
         @wraps(func)
         def admin_only_dec(*args, **kwargs):
@@ -284,6 +290,7 @@ class LiarsDiceApi(remote.Service):
     def active_game_only(func):
         """
         Prereq: @game_required
+        Errors out if the selected game has already been completed.
         """
         @wraps(func)
         def active_game_only_dec(*args, **kwargs):
@@ -295,7 +302,7 @@ class LiarsDiceApi(remote.Service):
 
 
 
-    # Define API methods
+    # API endpoint methods
     @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
             http_method="POST",
@@ -355,6 +362,7 @@ class LiarsDiceApi(remote.Service):
         response = GameCollection()
         response.game_messages = [game_to_message(x) for x in games]
         return response
+
 
     GAME_LOOKUP_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
@@ -446,6 +454,7 @@ class LiarsDiceApi(remote.Service):
         return hand
 
 
+    # Used below to help sort the standings tuples
     def get_key(self, item):
         return item[1]
 
@@ -475,7 +484,7 @@ class LiarsDiceApi(remote.Service):
         return create_leaderboard_collection(sorted_standings)
 
 
-    # These are the three game-advancing actions that can be taken during
+    # These are the three game-state-advancing actions that can be taken during
     # a turn by the active player in an active game:
 
     BID_POST_RC = endpoints.ResourceContainer(
