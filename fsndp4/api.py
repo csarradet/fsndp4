@@ -333,8 +333,6 @@ class LiarsDiceApi(remote.Service):
         return response
 
 
-
-
     GAME_LOOKUP_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
         game_id=messages.IntegerField(1, required=True))
@@ -378,10 +376,11 @@ class LiarsDiceApi(remote.Service):
         path="games/{game_id}",
         name="games.delete")
     @login_required
-    @admin_only
     @game_required
+    @active_player_only
+    @active_game_only
     def delete_game(self, request, **kwargs):
-        """ Look up one particular active or completed game """
+        """ Active player deletes a game, but ONLY if it's still in progress """
         kwargs[DEC_KEYS.GAME].key.delete()
         return message_types.VoidMessage()
 
