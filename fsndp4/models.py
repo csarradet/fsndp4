@@ -70,10 +70,13 @@ class Game(ndb.Model):
     #   in that player's hand (may be an empty list if
     #   the player has been eliminated)
     dice = ndb.PickleProperty(required=True)
-    high_bidder_key = ndb.KeyProperty(kind=User, default=None)
-    high_bid = ndb.StructuredProperty(Bid, default=None)
+    high_bidder_key = ndb.KeyProperty(
+        kind=User, default=None, indexed=False)
+    high_bid = ndb.StructuredProperty(
+        Bid, default=None, indexed=False)
     log = ndb.StringProperty(repeated=True)
     active = ndb.BooleanProperty(required=True, default=True)
+    updated = ndb.DateTimeProperty(required=True, auto_now=True)
 
     @staticmethod
     def create(player_emails):
