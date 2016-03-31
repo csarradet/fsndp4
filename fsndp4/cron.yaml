@@ -3,8 +3,3 @@ cron:
    url: /crons/send_reminder
    schedule: every day 1:01
    timezone: America/Chicago
-
- - description: daily leaderboard update
-   url: /crons/update_standings
-   schedule: every day 2:01
-   timezone: America/Chicago

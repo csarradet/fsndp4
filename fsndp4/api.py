@@ -57,8 +57,33 @@ class LogMessage(messages.Message):
 class LogCollection(messages.Message):
     log_messages = messages.MessageField(LogMessage, 1, repeated=True)
 
+class LeaderboardMessage(messages.Message):
+    user = messages.MessageField(UserMessage, 1, required=True)
+    win_percentage = messages.FloatField(2, required=True)
+
+class LeaderboardCollection(messages.Message):
+    leaderboard_messages = messages.MessageField(LeaderboardMessage, 1, repeated=True)
+
 
 # Helper methods for message creation
+def create_leaderboard_message(standing):
+    """
+    Expects a tuple of the form (User_model, float win_percentage)
+    """
+    inst = LeaderboardMessage()
+    inst.user = create_user_message(standing[0].email)
+    inst.win_percentage = standing[1]
+    return inst
+
+def create_leaderboard_collection(sorted_standings):
+    """ 
+    Expects an array of tuples of the form (User_model, float win_percentage)
+    sorted by win_percentage 
+    """
+    inst = LeaderboardCollection()
+    inst.leaderboard_messages = [create_leaderboard_message(x) for x in sorted_standings]
+    return inst
+
 def create_log_message(log_entry_str):
     inst = LogMessage()
     inst.entry = log_entry_str
@@ -127,8 +152,6 @@ def game_to_message(game_model):
     active_player_email = User.email_from_key(
         game_model.active_player_key)
     inst.active_player = create_user_message(active_player_email)
-    # inst.active_player_hand = create_dice_message(
-    #     game_model.dice[game_model.active_player_key])
 
     # The high bid/bidder are public info
     hbkey = game_model.high_bidder_key
@@ -266,8 +289,6 @@ class LiarsDiceApi(remote.Service):
 
 
 
-
-
     # Define API methods
     @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
@@ -282,7 +303,6 @@ class LiarsDiceApi(remote.Service):
         # The decorator does all the work here, no need for anything else.
         return message_types.VoidMessage()
 
-
     @endpoints.method(message_types.VoidMessage,
             UserCollection,
             http_method="GET",
@@ -296,7 +316,6 @@ class LiarsDiceApi(remote.Service):
         response.user_messages = [user_to_message(x) for x in User.get_all()]
         return response
 
-
     @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
             http_method="DELETE",
@@ -308,7 +327,6 @@ class LiarsDiceApi(remote.Service):
         """ Wipe all locally stored user info from the database """
         User.delete_all()
         return message_types.VoidMessage()
-
 
     GAME_LIST_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
@@ -331,7 +349,6 @@ class LiarsDiceApi(remote.Service):
         response = GameCollection()
         response.game_messages = [game_to_message(x) for x in games]
         return response
-
 
     GAME_LOOKUP_RC = endpoints.ResourceContainer(
         message_types.VoidMessage,
@@ -405,7 +422,6 @@ class LiarsDiceApi(remote.Service):
         game = Game.create(player_emails)
         return create_game_id_message(game.key.id())
 
-
     @endpoints.method(GAME_LOOKUP_RC,
         DiceMessage,
         http_method="GET",
@@ -422,6 +438,34 @@ class LiarsDiceApi(remote.Service):
             raise endpoints.NotFoundException("No hand found for current user in that game")
         hand = create_dice_message(game.dice[user_key])
         return hand
+
+    @endpoints.method(message_types.VoidMessage,
+            LeaderboardCollection,
+            http_method="GET",
+            path="users/standings",
+            name="users.standings")
+    @login_required
+    def get_player_standings(self, request, **kwargs):
+        """ Shows the player leaderboards, ranked by game win percentage """
+        standings = []
+        for user in User.get_all()
+            games_played = 0
+            games_won = 0            
+            result = Game.query(Game.player_keys.IN(user.key)).fetch()
+            if result:
+                games_played = float(len(result))
+            
+            result = Game.query(Game.winner_key == user.key).fetch()
+            if result:
+                games_won = float(len(result))
+
+            win_perc = games_won / games_played
+            standings.append((user, win_perc))
+
+        def get_key(item):
+            return item[1]
+        sorted_standings = sorted(standings, key=getKey)
+        return create_leaderboard_collection(sorted_standings)
 
 
     # These are the three game-advancing actions that can be taken during

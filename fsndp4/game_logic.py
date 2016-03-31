@@ -187,6 +187,7 @@ def game_complete(game, winner_key):
     # TODO: flag the game as inactive
     game.log_entry("Game over, {} wins!".format(
         models.User.email_from_key(winner_key)))
+    game.winner_key = winner_key
     game.active = False
 
 def get_count(game, player_key, rank):

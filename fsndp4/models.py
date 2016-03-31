@@ -9,7 +9,6 @@ import game_logic
 class User(ndb.Model):
     email = ndb.StringProperty(required=True)
     is_admin = ndb.BooleanProperty(default=False)
-    standings = ndb.StringProperty(required=True)
 
     @staticmethod
     def get_or_create(email):
@@ -63,6 +62,8 @@ class Game(ndb.Model):
     # List of ndb keys for all players in this game
     player_keys = ndb.KeyProperty(kind=User, repeated=True)
     active_player_key = ndb.KeyProperty(kind=User, required=True)
+    # Only populated when the game is over
+    winner_key = ndb.KeyProperty(kind=User, default=None)
     # Key: a participanting player's key
     # Value: that player's current score
     scores = ndb.PickleProperty(required=True)
