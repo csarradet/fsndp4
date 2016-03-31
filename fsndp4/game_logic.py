@@ -169,7 +169,7 @@ def turn_complete(game):
         game.log_entry("Turn complete, rerolling hands")
         reroll_hands(game)
 
-POINTS_TO_WIN = 5
+POINTS_TO_WIN = 2
 def round_complete(game, winner_key):
     game.scores[winner_key] += 1
     if game.scores[winner_key] >= POINTS_TO_WIN:

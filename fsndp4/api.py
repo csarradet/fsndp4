@@ -46,7 +46,8 @@ class GameMessage(messages.Message):
     active_player = messages.MessageField(UserMessage, 2, required=True)
     high_bidder = messages.MessageField(UserMessage, 3)
     high_bid = messages.MessageField(BidMessage, 4)
-    game_id = messages.MessageField(GameIdMessage, 5, required=True)
+    winner = messages.MessageField(UserMessage, 5)
+    game_id = messages.MessageField(GameIdMessage, 6, required=True)
 
 class GameCollection(messages.Message):
     game_messages = messages.MessageField(GameMessage, 1, repeated=True)
@@ -153,7 +154,7 @@ def game_to_message(game_model):
         game_model.active_player_key)
     inst.active_player = create_user_message(active_player_email)
 
-    # The high bid/bidder are public info
+    # The high bid/bidder are public info (if they exist)
     hbkey = game_model.high_bidder_key
     if hbkey:    
         high_bidder_email = User.email_from_key(
@@ -167,6 +168,11 @@ def game_to_message(game_model):
         inst.high_bid = create_bid_message(hb.count, hb.rank)
     else:
         inst.high_bid = None
+
+    # The winner listing is public info (if it exists)
+    if game_model.winner_key:
+        winner_email = User.email_from_key(game_model.winner_key)
+        inst.winner = create_user_message(winner_email)
 
     return inst
 
