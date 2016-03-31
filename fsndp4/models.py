@@ -63,7 +63,7 @@ class Game(ndb.Model):
     player_keys = ndb.KeyProperty(kind=User, repeated=True)
     active_player_key = ndb.KeyProperty(kind=User, required=True)
     # Only populated when the game is over
-    winner_key = ndb.KeyProperty(kind=User, required=True, default=None)
+    winner_key = ndb.KeyProperty(kind=User, default=None)
     # Key: a participanting player's key
     # Value: that player's current score
     scores = ndb.PickleProperty(required=True)
