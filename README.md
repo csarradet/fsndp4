@@ -48,3 +48,30 @@
     <li>Eventually one player will run out of dice.  The other player gets a point, and all lost dice are replaced for a new round.</li>
     <li>The game is over when a player has five points.  The fastest way to simulate this is to only bid 5x6, using a sacrificial account to make bad bluff/spot on calls every turn.</li>
 </ul>
+
+<h2>Endpoints</h2>
+<p>All methods have been labeled with docstrings; these are visible in the deployed app's API browser, but also pasted below for convenience:</p>
+<table>
+<tr><td>games.bids.create</td><td>The game's active player makes a new high bid</td></tr>
+<tr><td>games.bluff_calls.create</td><td>Instead of bidding this turn, declare the high bid to be a bluff</td></tr>
+<tr><td>games.create</td><td>If the current user is an admin, create a new game containing the provided players</td></tr>
+<tr><td>games.delete</td><td>Look up one particular active or completed game</td></tr>
+<tr><td>games.delete_all</td><td>Wipe all active and completed games from the database</td></tr>
+<tr><td>games.hand.get</td><td>Check the current player's hand in the given game</td></tr>
+<tr><td>games.list</td><td>List all active and completed games</td></tr>
+<tr><td>games.logs.lookup</td><td>List the log entries for an active or completed game</td></tr>
+<tr><td>games.lookup</td><td>Look up one particular active or completed game</td></tr>
+<tr><td>games.spot_on_calls.create</td><td>Instead of bidding this turn, declare the high bid to be spot on</td></tr>
+<tr><td>users.delete</td><td>Wipe all locally stored user info from the database</td></tr>
+<tr><td>users.enroll</td><td>Create a new user record in the DB for the logged in user unless one already exists.</td></tr>
+<tr><td>users.list</td><td>List all users that have ever interacted with the system</td></tr>
+</table>
+
+<p>For our implementation of the specific endpoints mentioned in the project instructions:</p>
+<ul>
+    <li>get_user_games: See games.list with my_pending_games_only set to True</li>
+    <li>cancel_game: See games.delete</li>
+    <li>get_high_scores: Liar's Dice is a multiplayer game; not required, not implemented</li>
+    <li>get_user_rankings: See users.standings</li>
+    <li>get_game_history: See games.logs.lookup</li>
+</ul>
