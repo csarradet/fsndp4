@@ -42,11 +42,12 @@ def __send_emails(stale_games_dict):
 
 def __send_email(player_key, game_list):
     app_id = app_identity.get_application_id()
-    player = User.
+    player = player_key.get()
+    # Getting the full model here so we can add an opt-out flag later
     subject = "Pending Liar's Dice games"
     body = "You have the following pending games:\n\n{}".format(
         '\n'.join(game_list))
     mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
-        User.email_from_key(player_key),
+        player.email,
         subject,
         body)
