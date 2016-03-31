@@ -10,12 +10,22 @@ handlers:
   static_files: favicon.ico
   upload: favicon\.ico
 
+# Required for the Python deferred async task library
+- url: /_ah/queue/deferred
+  script: google.appengine.ext.deferred.deferred.application
+  login: admin
+
+# Required for the API explorer
 - url: /_ah/spi/.*
   script: main.API_APP
 
+# Nightly cron job to remind users about stale games
 - url: /crons/send_reminder
   script: main.WEB_APP
+  secure: always
+  login: admin
 
+# All other web traffic
 - url: .*
   script: main.WEB_APP
 
@@ -26,3 +36,6 @@ libraries:
 
 - name: endpoints
   version: 1.0
+
+builtins:
+ - deferred: on

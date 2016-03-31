@@ -1,0 +1,5 @@
+cron:
+- description: daily reminder email
+  url: /crons/send_reminder
+  schedule: every day 1:01
+  timezone: America/Chicago

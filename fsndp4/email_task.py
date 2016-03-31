@@ -1,4 +1,6 @@
+import logging
 from google.appengine.api import mail
+from google.appengine.ext import deferred
 
 
 # class SendReminderEmail(webapp2.RequestHandler):
@@ -17,5 +19,16 @@ from google.appengine.api import mail
 #                            subject,
 #                            body)
 
+"""
+Email alerting system for users that have pending moves on old games
+(>24 hours since last update).
+
+Uses a task queue since the query/email process may take awhile; other
+modules should call start() to kick off a job.
+"""
+
 def start():
-    pass
+    deferred.defer(__email_task)
+
+def __email_task():
+    logging.info("__email_task() fired")
