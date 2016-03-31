@@ -439,6 +439,9 @@ class LiarsDiceApi(remote.Service):
         hand = create_dice_message(game.dice[user_key])
         return hand
 
+
+    def get_key(item):
+        return item[1]
     @endpoints.method(message_types.VoidMessage,
             LeaderboardCollection,
             http_method="GET",
@@ -448,7 +451,7 @@ class LiarsDiceApi(remote.Service):
     def get_player_standings(self, request, **kwargs):
         """ Shows the player leaderboards, ranked by game win percentage """
         standings = []
-        for user in User.get_all()
+        for user in User.get_all():
             games_played = 0
             games_won = 0            
             result = Game.query(Game.player_keys.IN(user.key)).fetch()
@@ -461,9 +464,6 @@ class LiarsDiceApi(remote.Service):
 
             win_perc = games_won / games_played
             standings.append((user, win_perc))
-
-        def get_key(item):
-            return item[1]
         sorted_standings = sorted(standings, key=getKey)
         return create_leaderboard_collection(sorted_standings)
 
