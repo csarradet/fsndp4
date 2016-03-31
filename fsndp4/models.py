@@ -9,6 +9,7 @@ import game_logic
 class User(ndb.Model):
     email = ndb.StringProperty(required=True)
     is_admin = ndb.BooleanProperty(default=False)
+    standings = ndb.StringProperty(required=True)
 
     @staticmethod
     def get_or_create(email):
