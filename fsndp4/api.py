@@ -310,7 +310,10 @@ class LiarsDiceApi(remote.Service):
         return message_types.VoidMessage()
 
 
-    @endpoints.method(message_types.VoidMessage,
+    GAME_LIST_RC = endpoints.ResourceContainer(
+        message_types.VoidMessage,
+        my_pending_games_only=messages.BooleanField(1))
+    @endpoints.method(GAME_LIST_RC,
             GameCollection,
             http_method="GET",
             path="games",
@@ -318,9 +321,18 @@ class LiarsDiceApi(remote.Service):
     @login_required
     def list_games(self, request, **kwargs):
         """ List all active and completed games """
+        games = None
+        user = kwargs[DEC_KEYS.USER]
+        if request.my_pending_games_only:            
+            games = Game.get_pending(user)
+        else:
+            games = Game.get_all()
+
         response = GameCollection()
-        response.game_messages = [game_to_message(x) for x in Game.get_all()]
+        response.game_messages = [game_to_message(x) for x in games]
         return response
+
+
 
 
     GAME_LOOKUP_RC = endpoints.ResourceContainer(

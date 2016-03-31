@@ -91,6 +91,13 @@ class Game(ndb.Model):
         return Game.query().fetch(limit=None)
 
     @staticmethod
+    def get_pending(user_model):
+        q = Game.query(
+            Game.active == True, 
+            Game.active_player_key == user_model.key)
+        return q.fetch(limit=None)            
+
+    @staticmethod
     def delete_all():
         keys = Game.query().fetch(keys_only=True)
         ndb.delete_multi(keys)
@@ -112,3 +119,5 @@ class Game(ndb.Model):
     def reset_high_bid(self):
         self.high_bid = None
         self.high_bidder_key = None
+
+

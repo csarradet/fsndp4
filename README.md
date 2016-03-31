@@ -33,7 +33,7 @@
     <li>Access the live API explorer (again)</li>
     <li>Browse to games.create. Submit your two Google account email addresses as the "email" fields of a "user_messages" envelope</li>
     <li>Copy the game ID that gets returned (in the "value" field)</li>
-    <li>Browse to games.list and submit.  You should see your newly created game.</li>
+    <li>Browse to games.list and submit with my_pending_games_only=False or blank.  You should see your newly created game.</li>
     <li>Browse to games.lookup and submit with the game ID you copied earlier.  You should see the same game.  Note the "active_player", this should be the first account alphabetically.</li>    <li></li>
     <li>Open an incognito tab in Chrome (ctrl+shift+N on Windows).  Browse to the API again and log in with your second account.</li>
     <li>As the active player, browse to games.hand.get to see your current hand.</li>
