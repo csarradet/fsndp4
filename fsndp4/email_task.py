@@ -8,7 +8,7 @@ modules should call start() to kick off a job.
 import datetime
 import logging
 
-from google.appengine.api import mail
+from google.appengine.api import mail, app_identity
 from google.appengine.ext import deferred
 
 from models import Game
@@ -55,8 +55,9 @@ def __send_email(player_key, game_list):
     player = player_key.get()
     # Getting the full model here so we can add an opt-out flag later
     subject = "Pending Liar's Dice games"
+    game_list_str = "\n".join([str(x) for x in game_list])
     body = "You have the following pending games:\n\n{}".format(
-        '\n'.join(game_list))
+        game_list_str)
     mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
         player.email,
         subject,
