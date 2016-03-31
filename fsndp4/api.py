@@ -360,19 +360,30 @@ class LiarsDiceApi(remote.Service):
         """ List the log entries for an active or completed game """
         return game_to_log_collection(kwargs[DEC_KEYS.GAME])    
 
-
     @endpoints.method(message_types.VoidMessage,
             message_types.VoidMessage,
             http_method="DELETE",
             path="games",
-            name="games.delete")
+            name="games.delete_all")
     @login_required
     @admin_only
-    def delete_games(self, request, **kwargs):
+    def delete_all_games(self, request, **kwargs):
         """ Wipe all active and completed games from the database """
         Game.delete_all()
         return message_types.VoidMessage()
 
+    @endpoints.method(GAME_LOOKUP_RC,
+        message_types.VoidMessage,
+        http_method="DELETE",
+        path="games/{game_id}",
+        name="games.delete")
+    @login_required
+    @admin_only
+    @game_required
+    def delete_game(self, request, **kwargs):
+        """ Look up one particular active or completed game """
+        kwargs[DEC_KEYS.GAME].key.delete()
+        return message_types.VoidMessage()
 
     @endpoints.method(UserCollection,
             GameIdMessage,
