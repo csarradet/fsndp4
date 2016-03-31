@@ -50,21 +50,21 @@
 </ul>
 
 <h2>Endpoints</h2>
-<p>All methods have been labeled with docstrings; these are visible in the deployed app's API browser, but also pasted below for convenience:</p>
+<p>All methods have been labeled with docstrings; these are visible in the deployed app's API browser, but also included below for convenience:</p>
 <table>
-<tr><td>games.bids.create</td><td>The game's active player makes a new high bid</td></tr>
-<tr><td>games.bluff_calls.create</td><td>Instead of bidding this turn, declare the high bid to be a bluff</td></tr>
-<tr><td>games.create</td><td>If the current user is an admin, create a new game containing the provided players</td></tr>
-<tr><td>games.delete</td><td>Look up one particular active or completed game</td></tr>
-<tr><td>games.delete_all</td><td>Wipe all active and completed games from the database</td></tr>
-<tr><td>games.hand.get</td><td>Check the current player's hand in the given game</td></tr>
-<tr><td>games.list</td><td>List all active and completed games</td></tr>
-<tr><td>games.logs.lookup</td><td>List the log entries for an active or completed game</td></tr>
-<tr><td>games.lookup</td><td>Look up one particular active or completed game</td></tr>
-<tr><td>games.spot_on_calls.create</td><td>Instead of bidding this turn, declare the high bid to be spot on</td></tr>
-<tr><td>users.delete</td><td>Wipe all locally stored user info from the database</td></tr>
-<tr><td>users.enroll</td><td>Create a new user record in the DB for the logged in user unless one already exists.</td></tr>
-<tr><td>users.list</td><td>List all users that have ever interacted with the system</td></tr>
+<tr><td>POST</td><td>games/{game_id}/bids</td><td>The game's active player makes a new high bid</td></tr>
+<tr><td>POST</td><td>games/{game_id}/bluff_calls</td><td>Instead of bidding this turn, declare the high bid to be a bluff</td></tr>
+<tr><td>POST</td><td>games</td><td>If the current user is an admin, create a new game containing the provided players</td></tr>
+<tr><td>DELETE</td><td>games/{game_id}</td><td>Delete an active game</td></tr>
+<tr><td>DELETE</td><td>games</td><td>Wipe all active and completed games from the database</td></tr>
+<tr><td>GET</td><td>games/{game_id}/hand</td><td>Check the current player's hand in the given game</td></tr>
+<tr><td>GET</td><td>games</td><td>List all active and completed games</td></tr>
+<tr><td>GET</td><td>games/{game_id}/logs</td><td>List the log entries for an active or completed game</td></tr>
+<tr><td>GET</td><td>games/{game_id}</td><td>Look up one particular active or completed game</td></tr>
+<tr><td>POST</td><td>games/{game_id}/spot_on_calls</td><td>Instead of bidding this turn, declare the high bid to be spot on</td></tr>
+<tr><td>DELETE</td><td>users</td><td>Wipe all locally stored user info from the database</td></tr>
+<tr><td>POST</td><td>enroll_user</td><td>Create a new user record in the DB for the logged in user unless one already exists.</td></tr>
+<tr><td>GET</td><td>users</td><td>List all users that have ever interacted with the system</td></tr>
 </table>
 
 <p>For our implementation of the specific endpoints mentioned in the project instructions:</p>
