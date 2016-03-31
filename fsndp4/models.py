@@ -42,8 +42,8 @@ class User(ndb.Model):
 
 
 class Bid(ndb.Model):
-    count = ndb.IntegerProperty(required=True)
-    rank = ndb.IntegerProperty(required=True)
+    count = ndb.IntegerProperty(required=True, indexed=False)
+    rank = ndb.IntegerProperty(required=True, indexed=False)
 
     @staticmethod
     def create(count, rank):
