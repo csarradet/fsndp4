@@ -1,3 +1,4 @@
+import logging
 from random import randint
 import models
 
@@ -32,7 +33,7 @@ def initialize(game):
     """
     keys = game.player_keys
     if not keys or len(keys) < 2:
-        raise ValueError("player_keys has noot been populated")
+        raise ValueError("player_keys has not been populated")
     game.active_player_key = keys[0]
     reset_scores(game)
     refill_hands(game)
@@ -162,12 +163,15 @@ def call_spot_on(game):
 
 
 def turn_complete(game):
-    living_player_keys = [x for x in game.dice if game.dice[x]]
+    living_player_keys = get_living_player_keys(game)
     if len(living_player_keys) == 1:
         round_complete(game, living_player_keys[0])
     else:
         game.log_entry("Turn complete, rerolling hands")
         reroll_hands(game)
+
+def get_living_player_keys(game):
+    return [x for x in game.dice if game.dice[x]]
 
 POINTS_TO_WIN = 2
 def round_complete(game, winner_key):
@@ -211,26 +215,36 @@ def assign_next_player(game):
 
 
 def __choose_next_player(game):
+    """ 
+    Traverse the full player list, starting with the active player.
+    Return the first key we find that's still a living_player.
     """
-    Since we only choose a new player after a bid, it should be safe to
-    skip over players with empty hands here (we won't get stuck in a weird
-    loop since a player can't be eliminated until a non-bid action is taken.)
+    living_player_keys = get_living_player_keys(game)
+    lp_count = len(living_player_keys)
+    if lp_count < 1:
+        raise GameRosterError("Tried to pick a new active player, but no one is still alive")
+    if lp_count == 1:
+        return living_player_keys[0]
 
-    Concatenates the player list against itself to catch the case
-    where a player is last in the list.
+    # There's more than one player still in the game, so we need to do a full traversal
+    all_player_keys = __reslice_array(game.active_player_key, game.player_keys)
+    for i in all_player_keys:
+        if (i != game.active_player_key) and (i in living_player_keys):
+            return i
+
+    # A match should have been found if all our preconditions were met, throw an error
+    raise GameRosterError("Unable to choose next player")
+
+
+def __reslice_array(target_key, all_keys):
     """
-    iter_players = game.player_keys + game.player_keys
-    curr_key = game.active_player_key
-    if curr_key not in iter_players:
-        raise GameRosterError(
-            "Active player is not enrolled for game {}".format(game.key))
-    pick_next = False
-    for i in iter_players:
-        if pick_next:
-            if game.scores[i]:
-                return i
-        elif curr_key == i:
-            pick_next = True
-    raise AssertionError("Unable to choose next player")
-
-
+    Build a new list consising of two concatenated slices:
+      1. Everyone including + after the target key
+      2. Everyone before the target key
+    """
+    count = len(all_keys)
+    i = all_keys.index(target_key)
+    slice1 = all_keys[i: count]
+    slice2 = all_keys[0:i]
+    output = slice1 + slice2
+    return output

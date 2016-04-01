@@ -448,7 +448,7 @@ class LiarsDiceApi(remote.Service):
         """ Check the current player's hand in the given game """
         game = kwargs[DEC_KEYS.GAME]
         user_key = kwargs[DEC_KEYS.USER].key
-        if user_key not in game.dice:
+        if user_key not in game.dice or not game.dice[user_key]:
             raise endpoints.NotFoundException("No hand found for current user in that game")
         hand = create_dice_message(game.dice[user_key])
         return hand
