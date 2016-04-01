@@ -72,6 +72,7 @@
     <tr><td>DELETE</td><td>users</td><td>Wipe all locally stored user info from the database</td></tr>
     <tr><td>POST</td><td>enroll_user</td><td>Create a new user record in the DB for the logged in user unless one already exists.</td></tr>
     <tr><td>GET</td><td>users</td><td>List all users that have ever interacted with the system</td></tr>
+    <tr><td>GET</td><td>users/standings</td><td>Shows the player leaderboards, ranked by game win percentage</td></tr>
 </table>
 
 <p>For our implementation of the specific endpoints mentioned in the project instructions:</p>
