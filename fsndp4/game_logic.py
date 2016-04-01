@@ -104,7 +104,6 @@ def __do_place_bid(game, new_bid):
     game.high_bid = new_bid
     game.high_bidder_key = game.active_player_key
     assign_next_player(game)
-    game.log_entry("It is now {}'s turn".format(game.active_player_email()))
     game.put()
 
 def call_bluff(game):
@@ -131,6 +130,7 @@ def call_bluff(game):
             game.active_player_email()))
         remove_die(game, game.active_player_key)
     turn_complete(game)
+    assign_next_player(game)
     game.put()
 
 def call_spot_on(game):
@@ -159,6 +159,7 @@ def call_spot_on(game):
             game.active_player_email()))
         remove_die(game, game.active_player_key)
     turn_complete(game)
+    assign_next_player(game)
     game.put()
 
 
@@ -212,6 +213,8 @@ def assign_next_player(game):
     """
     new_key = __choose_next_player(game)
     game.active_player_key = new_key
+    game.log_entry("It is now {}'s turn".format(game.active_player_email()))
+
 
 
 def __choose_next_player(game):
