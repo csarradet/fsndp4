@@ -1,6 +1,6 @@
 <h2>Overview</h2>
 <p>Google Cloud Endpoints implementation of the game Liar's Dice.</p>
-<p>For a 60 second overview of how the game works, see <a href="https://www.youtube.com/watch?v=jEo1kvtOkcg">this video</a></p>.
+<p>For a 60 second overview of how the game works, see <a href="https://www.youtube.com/watch?v=jEo1kvtOkcg">this video</a>.</p>
 <p>For a flowchart showing the turn structure of our version, see "p4_game_loop.png" in this repository.</p>
 
 <h2>Initial Setup</h2>
@@ -40,7 +40,7 @@
     <li>Browse to games.create. Submit your two Google account email addresses as the "email" fields of a "user_messages" envelope</li>
     <li>Copy the game ID that gets returned (in the "value" field)</li>
     <li>Browse to games.list and submit with my_pending_games_only=False or blank.  You should see your newly created game.</li>
-    <li>Browse to games.lookup and submit with the game ID you copied earlier.  You should see the same game.  Note the "active_player", this should be the first account alphabetically.</li>    <li></li>
+    <li>Browse to games.lookup and submit with the game ID you copied earlier.  You should see the same game.  Note the "active_player", this should be the first account alphabetically.</li>
     <li>Open an incognito tab in Chrome (ctrl+shift+N on Windows).  Browse to the API again and log in with your second account.</li>
     <li>As the active player, browse to games.hand.get to see your current hand.</li>
     <li>Browse to games.bids.create and place a new opening bid (e.g. 1x1).</li>
